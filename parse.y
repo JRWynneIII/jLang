@@ -5,6 +5,7 @@ void yyerror(char const *s) { fprintf(stderr, "%s\n",s); }
 %}
 
 %token tNUMBER
+%token tPLUS
 %start program
 
 %%
@@ -13,5 +14,6 @@ program: expressions
 expressions: expressions expression
            | expression
 
-expression: tNumber { printf("Parsed(%d)\n", $1); }
+expression: tNUMBER 
+          | expression tPLUS expression { printf("%d\n", $1 + $3); }
 
