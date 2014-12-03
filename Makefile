@@ -2,7 +2,7 @@ SRC=main.c parse.tab.c lex.yy.c
 all: comp
 
 comp: ${SRC}
-	cc -o comp ${SRC}
+	g++ -o comp ${SRC}
 
 lex.yy.c: grammar.l
 	flex grammar.l

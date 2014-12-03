@@ -1,27 +1,31 @@
 %{
-#define VTYPE(type, value) printf("%s(%s)\n",type,value)
+#define VTYPE(type, value) printf("%s(%s)\n",type,value); 
 #define TYPE(type) printf("%s\n",type)
-#include <stdio.h>
+#include <iostream>
 #include "parse.tab.h"
+using namespace std;
 %}
 NUMBER [0-9]+
 %option noyywrap
 %%
 #.*$ {}
 {NUMBER}(\.{NUMBER}|(\.{NUMBER})?[eE][+-]?{NUMBER}) { VTYPE("FLOAT", yytext); }
-{NUMBER} { yylval = atoi(yytext); return tNUMBER; }
-[a-z_][a-zA-Z0-9_]* { VTYPE("ID", yytext); }
+{NUMBER} { yylval = atoi(yytext); return NUMBER; }
 [\t ] {}
-"=" { TYPE("EQUAL"); }
+"func" { return FUNC; }
+"var" { return VAR; }
+[a-z_][a-zA-Z0-9_]* { yylval.str_val = new string(yytext); return ID; }
+"->" { return RARROW; }
+"=" { return EQUAL; }
 ">" { TYPE("GT"); }
 "<" { TYPE("LT"); }
 ">=" { TYPE("GTE"); }
 "<=" { TYPE("LTE"); }
 "!=" { TYPE("NEQUAL"); }
-"+" { return tPLUS; }
-"-" { TYPE("MINUS"); }
-"*" { TYPE("MULT"); }
-"/" { TYPE("DIV"); }
+"+" { return PLUS; }
+"-" { return MINUS; }
+"*" { return MUL; }
+"/" { return DIV; }
 "%" { TYPE("MOD"); }
 "!" { TYPE("EMARK"); }
 "?" { TYPE("QMARK"); }
@@ -31,13 +35,13 @@ NUMBER [0-9]+
 "]" { TYPE("RSBRACE"); }
 "(" { TYPE("LPAREN"); }
 ")" { TYPE("RPAREN"); }
-"{" { TYPE("LBRACE"); }
-"}" { TYPE("RBRACE"); }
+"{" { return LBRACE; }
+"}" { return RBRACE; }
 "@" { TYPE("AT"); }
 "." { TYPE("DOT"); }
 "," { TYPE("COMMA"); }
 ":" { TYPE("COLON"); }
-";" { TYPE("SEMICOLON"); }
+";" { return SEMICOLON; }
 \"([^"]|\\.)*\" { VTYPE("STRING", yytext); }
 \'([^']|\\.)*\' { VTYPE("STRING", yytext); }
 [A-Z][a-zA-Z0-9_]* { VTYPE("CONSTANT", yytext); }
