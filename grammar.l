@@ -17,7 +17,7 @@ NUMBER [0-9]+
 [\t ] {}
 "func" { return FUNC; }
 "var" { return VAR; }
-[a-z_][a-zA-Z0-9_]* { return ID; }
+[a-z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return ID; }
 "->" { return RARROW; }
 "=" { return EQUAL; }
 ">" { TYPE("GT"); }
