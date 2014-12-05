@@ -2,6 +2,9 @@
 #define VTYPE(type, value) printf("%s(%s)\n",type,value); 
 #define TYPE(type) printf("%s\n",type)
 #include <iostream>
+#include <string>
+#include <stdio.h>
+#include <stdlib.h>
 #include "parse.tab.h"
 using namespace std;
 %}
@@ -10,11 +13,11 @@ NUMBER [0-9]+
 %%
 #.*$ {}
 {NUMBER}(\.{NUMBER}|(\.{NUMBER})?[eE][+-]?{NUMBER}) { VTYPE("FLOAT", yytext); }
-{NUMBER} { yylval = atoi(yytext); return NUMBER; }
+{NUMBER} { yylval.doubleVal = atof(yytext); return NUMBER; }
 [\t ] {}
 "func" { return FUNC; }
 "var" { return VAR; }
-[a-z_][a-zA-Z0-9_]* { yylval.str_val = new string(yytext); return ID; }
+[a-z_][a-zA-Z0-9_]* { return ID; }
 "->" { return RARROW; }
 "=" { return EQUAL; }
 ">" { TYPE("GT"); }

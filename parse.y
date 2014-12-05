@@ -1,39 +1,45 @@
 %{
-#include<iostream>
-#include<map>
-#include<string>
-#include<cstdlib>
-using namespace std;
+#include<stdio.h>
 extern int yylex(void);
 void yyerror(char const *s) { fprintf(stderr, "%s\n",s); }
-map<string,double> vars;
 %}
 
 %union
 {
-  int int_val;
-  double double_val;
-  string* str_val;
+  int integer;
+  double doubleVal;
+  char* str;
 }
 
-%token NUMBER <double_val>
-%token SEMICOLON <int_val>
-%token PLUS <int_val>
-%token MINUS<int_val>
-%token DIV <int_val>
-%token MUL <int_val>
-%token DOT <int_val>
-%token EQUAL <int_val>
-%token VAR <str_val>
-%token FUNC <str_val>
-%token RARROW <int_val>
-%token LBRACE <int_val>
-%token RBRACE <int_val>
-%token ID <str_val>
+%token NUMBER 
+%token SEMICOLON 
+%token PLUS
+%token MINUS
+%token DIV 
+%token MUL
+%token DOT 
+%token EQUAL
+%token VAR 
+%token FUNC 
+%token RARROW
+%token LBRACE 
+%token RBRACE 
+%token ID 
 
-%type <double_val> variableDef NUMBER expression
-%type <str_val> ID 
-%type <double_val> binOp 
+%type <doubleVal> NUMBER 
+%type <str> SEMICOLON
+%type <str> PLUS
+%type <str> MINUS
+%type <str> DIV
+%type <str> MUL
+%type <str> DOT
+%type <str> EQUAL
+%type <str> VAR
+%type <str> FUNC
+%type <str> RARROW
+%type <str> LBRACE
+%type <str> RBRACE
+%type <str> ID
 
 %start program
 
@@ -49,13 +55,13 @@ expression: binOp
           | NUMBER
 
 variableDef: VAR ID SEMICOLON { printf("Variable defined\n"); }
-           | VAR ID EQUAL expression SEMICOLON { printf("Variable defined(var:%s is equal to %d\n",*$2,$4); }
+           | VAR ID EQUAL NUMBER SEMICOLON { printf("Variable defined %s is equal to %lf\n", $2, $4); }
           
 funcDef: FUNC '(' expressions ')' SEMICOLON
        | FUNC '(' expressions ')' LBRACE expressions RBRACE
 
-binOp: NUMBER PLUS NUMBER SEMICOLON { printf("%d\n", $1 + $3); }
-     | NUMBER MINUS NUMBER SEMICOLON { printf("%d\n", $1 - $3); }
-     | NUMBER DIV NUMBER SEMICOLON { printf("%d\n", $1 / $3); }
-     | NUMBER MUL NUMBER SEMICOLON { printf("%d\n", $1*$3); }
+binOp: NUMBER PLUS NUMBER SEMICOLON { printf("%lf\n", $1 + $3); }
+     | NUMBER MINUS NUMBER SEMICOLON { printf("%lf\n", $1 - $3); }
+     | NUMBER DIV NUMBER SEMICOLON { printf("%lf\n", $1 / $3); }
+     | NUMBER MUL NUMBER SEMICOLON { printf("%lf\n", $1*$3); }
 
