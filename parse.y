@@ -1,7 +1,12 @@
 %{
 #include<stdio.h>
+#include<iostream>
+#include<map>
+std::map<std::string,double> varTable;
 extern int yylex(void);
-void yyerror(char const *s) { fprintf(stderr, "%s\n",s); }
+extern void storeVar(char*,double);
+extern int lineNum;
+void yyerror(char const *s) { fprintf(stderr,"ERROR: %s in line %d\n", s, lineNum); }
 %}
 
 %union
@@ -12,6 +17,7 @@ void yyerror(char const *s) { fprintf(stderr, "%s\n",s); }
 }
 
 %token NUMBER 
+%token PRINTLN
 %token SEMICOLON 
 %token PLUS
 %token MINUS
@@ -24,6 +30,8 @@ void yyerror(char const *s) { fprintf(stderr, "%s\n",s); }
 %token RARROW
 %token LBRACE 
 %token RBRACE 
+%token RPAREN
+%token LPAREN
 %token ID 
 
 %type <doubleVal> NUMBER 
@@ -38,6 +46,8 @@ void yyerror(char const *s) { fprintf(stderr, "%s\n",s); }
 %type <str> FUNC
 %type <str> RARROW
 %type <str> LBRACE
+%type <str> LPAREN
+%type <str> RPAREN
 %type <str> RBRACE
 %type <str> ID
 
@@ -52,13 +62,28 @@ expressions: expressions expression
 expression: binOp 
           | variableDef 
           | funcDef
+          | printFunc
           | NUMBER
 
-variableDef: VAR ID SEMICOLON { printf("Variable defined\n"); }
-           | VAR ID EQUAL NUMBER SEMICOLON { printf("Variable defined %s is equal to %lf\n", $2, $4); }
+binOps: binOps binOp
+      | binOp
+
+variableDefs: variableDefs variableDef
+            | variableDef
+
+block: binOps
+     | variableDefs
+
+
+variableDef: VAR ID SEMICOLON { printf("Variable defined\n"); storeVar($2,0.0);}
+           | VAR ID EQUAL NUMBER SEMICOLON { printf("Variable defined %s is equal to %lf\n", $2, $4); storeVar($2,$4);}
+           | VAR ID EQUAL binOp SEMICOLON 
           
-funcDef: FUNC '(' expressions ')' SEMICOLON
-       | FUNC '(' expressions ')' LBRACE expressions RBRACE
+printFunc: PRINTLN ID SEMICOLON { std::string temp = $2; std::cout << varTable[temp] << std::endl; }
+funcDef: FUNC ID '(' expressions ')' RARROW ID SEMICOLON
+       | FUNC ID '(' ')' RARROW ID SEMICOLON
+       | FUNC ID '(' expressions ')' RARROW ID SEMICOLON LBRACE block RBRACE
+       | FUNC ID '(' ')' RARROW ID SEMICOLON LBRACE block RBRACE
 
 binOp: NUMBER PLUS NUMBER SEMICOLON { printf("%lf\n", $1 + $3); }
      | NUMBER MINUS NUMBER SEMICOLON { printf("%lf\n", $1 - $3); }

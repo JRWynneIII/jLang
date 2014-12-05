@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "parse.tab.h"
 using namespace std;
+int lineNum = 1;
 %}
 NUMBER [0-9]+
 %option noyywrap
@@ -36,8 +37,8 @@ NUMBER [0-9]+
 "|" { TYPE("OR"); }
 "[" { TYPE("LSBRACE"); }
 "]" { TYPE("RSBRACE"); }
-"(" { TYPE("LPAREN"); }
-")" { TYPE("RPAREN"); }
+"(" { return LPAREN; }
+")" { return RPAREN; }
 "{" { return LBRACE; }
 "}" { return RBRACE; }
 "@" { TYPE("AT"); }
@@ -45,9 +46,10 @@ NUMBER [0-9]+
 "," { TYPE("COMMA"); }
 ":" { TYPE("COLON"); }
 ";" { return SEMICOLON; }
+"println" { return PRINTLN; }
 \"([^"]|\\.)*\" { VTYPE("STRING", yytext); }
 \'([^']|\\.)*\' { VTYPE("STRING", yytext); }
 [A-Z][a-zA-Z0-9_]* { VTYPE("CONSTANT", yytext); }
 
-\n {}
+\n {lineNum++;}
 . { fprintf(stderr, "Unknown token '%s'\n", yytext); }
