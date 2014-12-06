@@ -80,12 +80,13 @@ variableDef: VAR ID SEMICOLON { printf("Variable defined\n"); storeVar($2,0.0);}
            | VAR ID EQUAL NUMBER SEMICOLON { printf("Variable defined %s is equal to %lf\n", $2, $4); storeVar($2,$4);}
            | VAR ID EQUAL binOp SEMICOLON 
           
+funcDef: FUNC ID LPAREN expressions RPAREN RARROW ID SEMICOLON
+       | FUNC ID LPAREN RPAREN RARROW ID SEMICOLON
+       | FUNC ID LPAREN expressions RPAREN RARROW ID SEMICOLON LBRACE block RBRACE
+       | FUNC ID LPAREN RPAREN RARROW ID SEMICOLON LBRACE block RBRACE
+
 printFunc: PRINTLN ID SEMICOLON  { std::string temp = $2; std::cout << varTable[temp] << std::endl; }
 
-funcDef: FUNC ID '(' expressions ')' RARROW ID SEMICOLON
-       | FUNC ID '(' ')' RARROW ID SEMICOLON
-       | FUNC ID '(' expressions ')' RARROW ID SEMICOLON LBRACE block RBRACE
-       | FUNC ID '(' ')' RARROW ID SEMICOLON LBRACE block RBRACE
 
 binOp: NUMBER PLUS NUMBER SEMICOLON { printf("%lf\n", $1 + $3); }
      | NUMBER MINUS NUMBER SEMICOLON { printf("%lf\n", $1 - $3); }
