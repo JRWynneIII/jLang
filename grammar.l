@@ -18,6 +18,7 @@ NUMBER [0-9]+
 [\t ] {}
 "func" { return FUNC; }
 "var" { return VAR; }
+"println" { return PRINTLN; }
 [a-z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return ID; }
 "->" { return RARROW; }
 "=" { return EQUAL; }
@@ -46,7 +47,6 @@ NUMBER [0-9]+
 "," { TYPE("COMMA"); }
 ":" { TYPE("COLON"); }
 ";" { return SEMICOLON; }
-"println" { return PRINTLN; }
 \"([^"]|\\.)*\" { VTYPE("STRING", yytext); }
 \'([^']|\\.)*\' { VTYPE("STRING", yytext); }
 [A-Z][a-zA-Z0-9_]* { VTYPE("CONSTANT", yytext); }
