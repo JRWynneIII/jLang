@@ -47,8 +47,8 @@ NUMBER [0-9]+
 "," { TYPE("COMMA"); }
 ":" { TYPE("COLON"); }
 ";" { return SEMICOLON; }
-\"([^"]|\\.)*\" { VTYPE("STRING", yytext); }
-\'([^']|\\.)*\' { VTYPE("STRING", yytext); }
+\"([^"]|\\.)*\" { yylval.str = strdup(yytext); return STRING; }
+\'([^']|\\.)*\' {  yylval.str = strdup(yytext); return STRING; }
 [A-Z][a-zA-Z0-9_]* { VTYPE("CONSTANT", yytext); }
 
 \n {lineNum++;}
