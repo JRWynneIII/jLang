@@ -1,4 +1,5 @@
-#include "llvm/Analysis/Verifier.h"
+//#include "llvm/Analysis/Verifier.h"
+#include "llvm/IR/Verifier.h"           //comment for other workstation
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
@@ -22,7 +23,7 @@ enum Token
 
 static Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
-static map<std::string, Value*> NamedValues;
+static std::map<std::string, Value*> NamedValues;
 
 static std::string IdentifierStr;  // Filled in if tok_identifier
 static double NumVal;              // Filled in if tok_number
@@ -89,23 +90,26 @@ public:
 
 class NumberExprAST : public ExprAST 
 {
+  double Val;
 public:
-  NumberExprAST(double val) {}
-  virtual Value *Codegen() = 0;
+  NumberExprAST(double val) : Val(val) {}
+  virtual Value *Codegen();
 };
 
 class VariableExprAST : public ExprAST {
   std::string Name;
 public:
   VariableExprAST(const std::string &name) : Name(name) {}
-  virtual Value *Codegen() = 0;
+  virtual Value *Codegen();
 };
 
 class BinaryExprAST : public ExprAST 
 {
+  char Op;
+  ExprAST *LHS, *RHS;
 public:
-  BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) {}
-  virtual Value *Codegen() = 0;
+  BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) : Op(op), LHS(lhs), RHS(rhs) {}
+  virtual Value *Codegen();
 };
 
 class CallExprAST : public ExprAST 
@@ -115,7 +119,7 @@ class CallExprAST : public ExprAST
 public:
   CallExprAST(const std::string &callee, std::vector<ExprAST*> &args)
     : Callee(callee), Args(args) {}
-  virtual Value *Codegen() = 0;
+  virtual Value *Codegen();
 };
 
 class PrototypeAST 
@@ -125,22 +129,25 @@ class PrototypeAST
 public:
   PrototypeAST(const std::string &name, const std::vector<std::string> &args)
     : Name(name), Args(args) {}
-  virtual Value *Codegen() = 0;
+  Function *Codegen();
   
 };
 
 /// FunctionAST - This class represents a function definition itself.
 class FunctionAST 
 {
+  PrototypeAST *Proto;
+  ExprAST* Body;
 public:
-  FunctionAST(PrototypeAST *proto, ExprAST *body) {}
-  virtual Value *Codegen() = 0;
+  FunctionAST(PrototypeAST *proto, ExprAST *body) : Proto(proto), Body(body) {}
+  Function *Codegen();
 };
 } // end anonymous namespace
 
 ExprAST *Error(const char *Str) { fprintf(stderr, "Error: %s\n", Str);return 0;}
 Value *ErrorV(const char *Str) { Error(Str); return 0; }
 PrototypeAST *ErrorP(const char *Str) { Error(Str); return 0; }
+FunctionAST *ErrorF(const char *Str) { Error(Str); return 0; }
 
 Value* NumberExprAST::Codegen()
 {
@@ -161,9 +168,9 @@ Value* BinaryExprAST::Codegen()
 
   switch(Op)
   {
-    case '+' return Builder.CreateFAdd(L, R, "addtmp");
-    case '-' return Builder.CreateFSub(L, R, "subtmp");
-    case '*' return Builder.CreateFMul(L, R, "multmp");
+    case '+': return Builder.CreateFAdd(L, R, "addtmp");
+    case '-': return Builder.CreateFSub(L, R, "subtmp");
+    case '*': return Builder.CreateFMul(L, R, "multmp");
     case '<':
       L = Builder.CreateFCmpULT(L, R, "cmptmp");
       return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
@@ -171,9 +178,9 @@ Value* BinaryExprAST::Codegen()
   }
 }
 
-Value* CallExprAst::Codegen()
+Value* CallExprAST::Codegen()
 {
-  Function *CalleeF = TheModule->getFunction(Callee);
+  Function *CalleeF = theModule->getFunction(Callee);
   if (CalleeF == 0)
     return ErrorV("Unknown function ref!");
   if (CalleeF->arg_size() != Args.size())
@@ -190,13 +197,13 @@ Value* CallExprAst::Codegen()
 
 Function* PrototypeAST::Codegen()
 {
-  std::vector<Type*> Doubles(Args.size(), type::getDoubleTY(getGlobalContext()));
+  std::vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
   FunctionType *FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()), Doubles, false);
-  Function *F = Function::Create(FT, Function::ExternalLinkage, Name, TheModule);
+  Function *F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
   if (F->getName() !=Name)
   {
     F->eraseFromParent();
-    F = TheModule->getFunction(Name);
+    F = theModule->getFunction(Name);
     if (!F->empty())
     {
       ErrorF("Redefinition of function");
@@ -234,7 +241,7 @@ Function* FunctionAST::Codegen()
     Builder.CreateRet(RetVal);
     //validate generated code
     verifyFunction(*theFunction);
-    return theFunction
+    return theFunction;
   }
   //There was an error reading the body! remove function
   theFunction->eraseFromParent();
@@ -422,9 +429,13 @@ static PrototypeAST *ParseExtern()
 
 static void HandleDefinition() 
 {
-  if (ParseDefinition()) 
+  if (FunctionAST *F = ParseDefinition()) 
   {
-    fprintf(stderr, "Parsed a function definition.\n");
+    if (Function *LF = F->Codegen())
+    {
+      fprintf(stderr, "Parsed a function definition.\n");
+      LF->dump();
+    }
   } 
   else
   {
@@ -435,9 +446,13 @@ static void HandleDefinition()
 
 static void HandleExtern()
 {
-  if (ParseExtern())
+  if (PrototypeAST* P = ParseExtern())
   {
-    fprintf(stderr, "Parsed an extern\n");
+    if (Function* F = P->Codegen())
+    {
+      fprintf(stderr, "Parsed an extern\n");
+      F->dump();
+    }
   }
   else
   {
@@ -449,9 +464,13 @@ static void HandleExtern()
 static void HandleTopLevelExpression() 
 {
   // Evaluate a top-level expression into an anonymous function.
-  if (ParseTopLevelExpr()) 
+  if (FunctionAST* F = ParseTopLevelExpr()) 
   {
-    fprintf(stderr, "Parsed a top-level expr\n");
+    if (Function *LF = F->Codegen())
+    {
+      fprintf(stderr, "Parsed a top-level expr\n");
+      LF->dump();
+    }
   } 
   else
   {
