@@ -1,42 +1,54 @@
-//#include "llvm/Analysis/Verifier.h"
-#include "llvm/IR/Verifier.h"           //comment for other workstation
+#include "llvm/Analysis/Passes.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/MCJIT.h"
+#include "llvm/ExecutionEngine/SectionMemoryManager.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+//#include "llvm/IR/Verifier.h"
+#include "llvm/PassManager.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Transforms/Scalar.h"
+
+
+#include "llvm/Analysis/Verifier.h"
+//#include "llvm/IR/DerivedTypes.h"
+//#include "llvm/IR/IRBuilder.h"
+//#include "llvm/IR/LLVMContext.h"
+//#include "llvm/IR/Module.h"
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
 #include <map>
 #include <string>
 #include <vector>
 using namespace llvm;
-
-enum Token
+enum Token 
 {
   tok_eof = -1,
 
+  // commands
   tok_def = -2, tok_extern = -3,
 
+  // primary
   tok_identifier = -4, tok_number = -5
 };
-
-static Module *theModule;
-static IRBuilder<> Builder(getGlobalContext());
-static std::map<std::string, Value*> NamedValues;
 
 static std::string IdentifierStr;  // Filled in if tok_identifier
 static double NumVal;              // Filled in if tok_number
 
+/// gettok - Return the next token from standard input.
 static int gettok() 
 {
   static int LastChar = ' ';
 
+  // Skip any whitespace.
   while (isspace(LastChar))
     LastChar = getchar();
 
   if (isalpha(LastChar)) 
-  {
+  { // identifier: [a-zA-Z][a-zA-Z0-9]*
     IdentifierStr = LastChar;
     while (isalnum((LastChar = getchar())))
       IdentifierStr += LastChar;
@@ -47,7 +59,7 @@ static int gettok()
   }
 
   if (isdigit(LastChar) || LastChar == '.') 
-  {   
+  {   // Number: [0-9.]+
     std::string NumStr;
     do 
     {
@@ -79,8 +91,9 @@ static int gettok()
   return ThisChar;
 }
 
-namespace 
+namespace
 {
+/// ExprAST - Base class for all expression nodes.
 class ExprAST 
 {
 public:
@@ -88,6 +101,7 @@ public:
   virtual Value *Codegen() = 0;
 };
 
+/// NumberExprAST - Expression class for numeric literals like "1.0".
 class NumberExprAST : public ExprAST 
 {
   double Val;
@@ -96,22 +110,27 @@ public:
   virtual Value *Codegen();
 };
 
-class VariableExprAST : public ExprAST {
+/// VariableExprAST - Expression class for referencing a variable, like "a".
+class VariableExprAST : public ExprAST 
+{
   std::string Name;
 public:
   VariableExprAST(const std::string &name) : Name(name) {}
   virtual Value *Codegen();
 };
 
+/// BinaryExprAST - Expression class for a binary operator.
 class BinaryExprAST : public ExprAST 
 {
   char Op;
   ExprAST *LHS, *RHS;
 public:
-  BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) : Op(op), LHS(lhs), RHS(rhs) {}
+  BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) 
+    : Op(op), LHS(lhs), RHS(rhs) {}
   virtual Value *Codegen();
 };
 
+/// CallExprAST - Expression class for function calls.
 class CallExprAST : public ExprAST 
 {
   std::string Callee;
@@ -122,6 +141,9 @@ public:
   virtual Value *Codegen();
 };
 
+/// PrototypeAST - This class represents the "prototype" for a function,
+/// which captures its name, and its argument names (thus implicitly the number
+/// of arguments the function takes).
 class PrototypeAST 
 {
   std::string Name;
@@ -129,125 +151,22 @@ class PrototypeAST
 public:
   PrototypeAST(const std::string &name, const std::vector<std::string> &args)
     : Name(name), Args(args) {}
-  Function *Codegen();
   
+  Function *Codegen();
 };
 
 /// FunctionAST - This class represents a function definition itself.
 class FunctionAST 
 {
   PrototypeAST *Proto;
-  ExprAST* Body;
+  ExprAST *Body;
 public:
-  FunctionAST(PrototypeAST *proto, ExprAST *body) : Proto(proto), Body(body) {}
+  FunctionAST(PrototypeAST *proto, ExprAST *body)
+    : Proto(proto), Body(body) {}
+  
   Function *Codegen();
 };
 } // end anonymous namespace
-
-ExprAST *Error(const char *Str) { fprintf(stderr, "Error: %s\n", Str);return 0;}
-Value *ErrorV(const char *Str) { Error(Str); return 0; }
-PrototypeAST *ErrorP(const char *Str) { Error(Str); return 0; }
-FunctionAST *ErrorF(const char *Str) { Error(Str); return 0; }
-
-Value* NumberExprAST::Codegen()
-{
-  return ConstantFP::get(getGlobalContext(),APFloat(Val));
-}
-
-Value* VariableExprAST::Codegen()
-{
-  Value *V = NamedValues[Name];
-  return V ? V : ErrorV("Unknown Variable Name");
-}
-
-Value* BinaryExprAST::Codegen()
-{
-  Value *L = LHS->Codegen();
-  Value *R = RHS->Codegen();
-  if(L == 0 || R == 0) return 0;
-
-  switch(Op)
-  {
-    case '+': return Builder.CreateFAdd(L, R, "addtmp");
-    case '-': return Builder.CreateFSub(L, R, "subtmp");
-    case '*': return Builder.CreateFMul(L, R, "multmp");
-    case '<':
-      L = Builder.CreateFCmpULT(L, R, "cmptmp");
-      return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
-    default: return ErrorV("Invalid Binary Operator");
-  }
-}
-
-Value* CallExprAST::Codegen()
-{
-  Function *CalleeF = theModule->getFunction(Callee);
-  if (CalleeF == 0)
-    return ErrorV("Unknown function ref!");
-  if (CalleeF->arg_size() != Args.size())
-    return ErrorV("Incorrect Num of arguements passed!");
-  
-  std::vector<Value*> ArgsV;
-  for(unsigned i = 0, e=Args.size(); i!=e; ++i)
-  {
-    ArgsV.push_back(Args[i]->Codegen());
-    if(ArgsV.back() == 0) return 0;
-  }
-  return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
-}
-
-Function* PrototypeAST::Codegen()
-{
-  std::vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
-  FunctionType *FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()), Doubles, false);
-  Function *F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
-  if (F->getName() !=Name)
-  {
-    F->eraseFromParent();
-    F = theModule->getFunction(Name);
-    if (!F->empty())
-    {
-      ErrorF("Redefinition of function");
-      return 0;
-    }
-
-    if(F->arg_size()!=Args.size())
-    {
-      ErrorF("Redef of function with a different num of args");
-      return 0;
-    }
-  }
-  unsigned Idx = 0;
-  for(Function::arg_iterator AI = F->arg_begin(); Idx != Args.size(); ++AI, ++Idx)
-  {
-    AI->setName(Args[Idx]);
-    NamedValues[Args[Idx]] = AI;  //Add arguements to symbol table
-  }
-
-  return F;
-}
-
-Function* FunctionAST::Codegen()
-{
-  NamedValues.clear();
-  Function* theFunction = Proto->Codegen();
-  if (theFunction == 0)
-    return 0;
-  //create a new basic block to start insertion info
-  BasicBlock* BB = BasicBlock::Create(getGlobalContext(), "entry", theFunction);
-  Builder.SetInsertPoint(BB);
-  if(Value* RetVal = Body->Codegen())
-  {
-    //Finish off the function
-    Builder.CreateRet(RetVal);
-    //validate generated code
-    verifyFunction(*theFunction);
-    return theFunction;
-  }
-  //There was an error reading the body! remove function
-  theFunction->eraseFromParent();
-  return 0;
-}
-
 static int CurTok;
 static int getNextToken() 
 {
@@ -261,12 +180,14 @@ static int GetTokPrecedence()
   if (!isascii(CurTok))
     return -1;
   
-  // Make sure it's a declared binop.
   int TokPrec = BinopPrecedence[CurTok];
   if (TokPrec <= 0) return -1;
   return TokPrec;
 }
 
+ExprAST *Error(const char *Str) { fprintf(stderr, "Error: %s\n", Str);return 0;}
+PrototypeAST *ErrorP(const char *Str) { Error(Str); return 0; }
+FunctionAST *ErrorF(const char *Str) { Error(Str); return 0; }
 
 static ExprAST *ParseExpression();
 
@@ -282,9 +203,9 @@ static ExprAST *ParseIdentifierExpr()
   // Call.
   getNextToken();  // eat (
   std::vector<ExprAST*> Args;
-  if (CurTok != ')') 
+  if (CurTok != ')')
   {
-    while (1) 
+    while (1)
     {
       ExprAST *Arg = ParseExpression();
       if (!Arg) return 0;
@@ -304,6 +225,7 @@ static ExprAST *ParseIdentifierExpr()
   return new CallExprAST(IdName, Args);
 }
 
+/// numberexpr ::= number
 static ExprAST *ParseNumberExpr() 
 {
   ExprAST *Result = new NumberExprAST(NumVal);
@@ -311,6 +233,7 @@ static ExprAST *ParseNumberExpr()
   return Result;
 }
 
+/// parenexpr ::= '(' expression ')'
 static ExprAST *ParseParenExpr() 
 {
   getNextToken();  // eat (.
@@ -410,51 +333,189 @@ static FunctionAST *ParseDefinition()
   return 0;
 }
 
+/// toplevelexpr ::= expression
 static FunctionAST *ParseTopLevelExpr() 
 {
   if (ExprAST *E = ParseExpression()) 
   {
-    // Make an anonymous proto.
     PrototypeAST *Proto = new PrototypeAST("", std::vector<std::string>());
     return new FunctionAST(Proto, E);
   }
   return 0;
 }
 
+/// external ::= 'extern' prototype
 static PrototypeAST *ParseExtern() 
 {
   getNextToken();  // eat extern.
   return ParsePrototype();
 }
 
+static Module *TheModule;
+static IRBuilder<> Builder(getGlobalContext());
+static std::map<std::string, Value*> NamedValues;
+static FunctionPassManager *theFPM;
+
+Value *ErrorV(const char *Str) { Error(Str); return 0; }
+
+Value *NumberExprAST::Codegen() 
+{
+  return ConstantFP::get(getGlobalContext(), APFloat(Val));
+}
+
+Value *VariableExprAST::Codegen() 
+{
+  // Look this variable up in the function.
+  Value *V = NamedValues[Name];
+  return V ? V : ErrorV("Unknown variable name");
+}
+
+Value *BinaryExprAST::Codegen() 
+{
+  Value *L = LHS->Codegen();
+  Value *R = RHS->Codegen();
+  if (L == 0 || R == 0) return 0;
+  
+  switch (Op) 
+  {
+    case '+': return Builder.CreateFAdd(L, R, "addtmp");
+    case '-': return Builder.CreateFSub(L, R, "subtmp");
+    case '*': return Builder.CreateFMul(L, R, "multmp");
+    case '<':
+      L = Builder.CreateFCmpULT(L, R, "cmptmp");
+      // Convert bool 0/1 to double 0.0 or 1.0
+      return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()),
+                                "booltmp");
+    default: return ErrorV("invalid binary operator");
+  }
+}
+
+Value *CallExprAST::Codegen() 
+{
+  // Look up the name in the global module table.
+  Function *CalleeF = TheModule->getFunction(Callee);
+  if (CalleeF == 0)
+    return ErrorV("Unknown function referenced");
+  
+  // If argument mismatch error.
+  if (CalleeF->arg_size() != Args.size())
+    return ErrorV("Incorrect # arguments passed");
+
+  std::vector<Value*> ArgsV;
+  for (unsigned i = 0, e = Args.size(); i != e; ++i) 
+  {
+    ArgsV.push_back(Args[i]->Codegen());
+    if (ArgsV.back() == 0) return 0;
+  }
+  
+  return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
+}
+
+Function *PrototypeAST::Codegen() 
+{
+  // Make the function type:  double(double,double) etc.
+  std::vector<Type*> Doubles(Args.size(),
+                             Type::getDoubleTy(getGlobalContext()));
+  FunctionType *FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()),
+                                       Doubles, false);
+  
+  Function *F = Function::Create(FT, Function::ExternalLinkage, Name, TheModule);
+  
+  if (F->getName() != Name) 
+  {
+    // Delete the one we just made and get the existing one.
+    F->eraseFromParent();
+    F = TheModule->getFunction(Name);
+    
+    // If F already has a body, reject this.
+    if (!F->empty()) 
+    {
+      ErrorF("redefinition of function");
+      return 0;
+    }
+    
+    // If F took a different number of args, reject.
+    if (F->arg_size() != Args.size()) 
+    {
+      ErrorF("redefinition of function with different # args");
+      return 0;
+    }
+  }
+  
+  // Set names for all arguments.
+  unsigned Idx = 0;
+  for (Function::arg_iterator AI = F->arg_begin(); Idx != Args.size(); ++AI, ++Idx) 
+  {
+    AI->setName(Args[Idx]);
+    
+    // Add arguments to variable symbol table.
+    NamedValues[Args[Idx]] = AI;
+  }
+  
+  return F;
+}
+
+
+Function *FunctionAST::Codegen() 
+{
+  NamedValues.clear();
+  
+  Function *TheFunction = Proto->Codegen();
+  if (TheFunction == 0)
+    return 0;
+  
+  // Create a new basic block to start insertion into.
+  BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", TheFunction);
+  Builder.SetInsertPoint(BB);
+  
+  if (Value *RetVal = Body->Codegen()) 
+  {
+    // Finish off the function.
+    Builder.CreateRet(RetVal);
+
+    // Validate the generated code, checking for consistency.
+    verifyFunction(*TheFunction);
+
+    theFPM->run(*TheFunction);
+
+    return TheFunction;
+  }
+  
+  // Error reading body, remove function.
+  TheFunction->eraseFromParent();
+  return 0;
+}
+
+static ExecutionEngine *TheExecutionEngine;
+
 static void HandleDefinition() 
 {
   if (FunctionAST *F = ParseDefinition()) 
   {
-    if (Function *LF = F->Codegen())
+    if (Function *LF = F->Codegen()) 
     {
-      fprintf(stderr, "Parsed a function definition.\n");
+      fprintf(stderr, "Read function definition:");
       LF->dump();
     }
-  } 
-  else
+  }
+  else 
   {
     // Skip token for error recovery.
     getNextToken();
   }
 }
 
-static void HandleExtern()
+static void HandleExtern() 
 {
-  if (PrototypeAST* P = ParseExtern())
+  if (PrototypeAST *P = ParseExtern()) 
   {
-    if (Function* F = P->Codegen())
+    if (Function *F = P->Codegen()) 
     {
-      fprintf(stderr, "Parsed an extern\n");
+      fprintf(stderr, "Read extern: ");
       F->dump();
     }
-  }
-  else
+  } 
+  else 
   {
     // Skip token for error recovery.
     getNextToken();
@@ -464,28 +525,30 @@ static void HandleExtern()
 static void HandleTopLevelExpression() 
 {
   // Evaluate a top-level expression into an anonymous function.
-  if (FunctionAST* F = ParseTopLevelExpr()) 
+  if (FunctionAST *F = ParseTopLevelExpr()) 
   {
-    if (Function *LF = F->Codegen())
+    if (Function *LF = F->Codegen()) 
     {
-      fprintf(stderr, "Parsed a top-level expr\n");
+      fprintf(stderr, "Read top-level expression:");
       LF->dump();
+      void *FPtr = TheExecutionEngine->getPointerToFunction(LF);
+      double (*FP)() = (double (*)())(intptr_t)FPtr;
+      fprintf(stderr, "Evaluated to %f\n", FP());
     }
   } 
-  else
+  else 
   {
     // Skip token for error recovery.
     getNextToken();
   }
 }
 
-/// top ::= definition | external | expression | ';'
 static void MainLoop() 
 {
-  while (1)
- {
+  while (1) 
+  {
     fprintf(stderr, "ready> ");
-    switch (CurTok)
+    switch (CurTok) 
     {
       case tok_eof:    return;
       case ';':        getNextToken(); break;  // ignore top-level semicolons.
@@ -496,8 +559,16 @@ static void MainLoop()
   }
 }
 
+extern "C" double putchard(double X) 
+{
+  putchar((char)X);
+  return 0;
+}
+
 int main() 
 {
+  LLVMContext &Context = getGlobalContext();
+
   // Install standard binary operators.
   // 1 is lowest precedence.
   BinopPrecedence['<'] = 10;
@@ -509,9 +580,31 @@ int main()
   fprintf(stderr, "ready> ");
   getNextToken();
 
+  // Make the module, which holds all the code.
+  TheModule = new Module("my cool jit", Context);
+  //Add JIT compiling. takes ownership of TheModule
+  TheExecutionEngine = EngineBuilder(TheModule).create();
+
+  FunctionPassManager ourFPM(TheModule);
+  //Register current layout
+  ourFPM.add(new DataLayout(*TheExecutionEngine->getDataLayout()));
+  //Provide basic AliasAnalysis support for GVN(Global Value Numbering)
+  ourFPM.add(createBasicAliasAnalysisPass());
+  //Do "peephole" and bit twidling optomizations
+  ourFPM.add(createInstructionCombiningPass());
+  //Reassociate expressions
+  ourFPM.add(createReassociatePass());
+  //Eliminate common subexpressions
+  ourFPM.add(createGVNPass());
+  //Simplify control flow graph
+  ourFPM.add(createCFGSimplificationPass());
+  ourFPM.doInitialization();
+  theFPM = &ourFPM;
   // Run the main "interpreter loop" now.
   MainLoop();
 
+  // Print out all of the generated code.
+  TheModule->dump();
+
   return 0;
 }
-
