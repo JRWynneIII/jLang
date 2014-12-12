@@ -583,7 +583,7 @@ int main()
   // Make the module, which holds all the code.
   TheModule = new Module("my cool jit", Context);
   //Add JIT compiling. takes ownership of TheModule
-  TheExecutionEngine = EngineBuilder(TheModule).create();
+  TheExecutionEngine = EngineBuilder(TheModule).setUseMCJIT(true).create();
 
   FunctionPassManager ourFPM(TheModule);
   //Register current layout
