@@ -5,7 +5,7 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
-#include "parse.tab.h"
+#include "jcode.tab.h"
 using namespace std;
 int lineNum = 1;
 %}
@@ -15,10 +15,6 @@ NUMBER [0-9]+
 #.*$ {}
 {NUMBER}(\.{NUMBER}|(\.{NUMBER})?[eE][+-]?{NUMBER}) { yylval.doubleVal = atof(yytext); return FLOAT; }
 {NUMBER} { yylval.intVal = atof(yytext); return NUMBER; }
-[a-z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return ID; }
-\"([^"]|\\.)*\" { yylval.str = strdup(yytext); return STRING; }
-\'([^']|\\.)*\' {  yylval.str = strdup(yytext); return STRING; }
-[A-Z][a-zA-Z0-9_]* { VTYPE("CONSTANT", yytext); }
 [\t ] {}
 "func" { return FUNC; }
 "int" { return INT; }
@@ -59,6 +55,10 @@ NUMBER [0-9]+
 "," { return COMMA; }
 ":" { return COLON; }
 ";" { return SEMICOLON; }
+[a-z_][a-zA-Z0-9_]* { yylval.strVal = strdup(yytext); return ID; }
+[A-Z][a-zA-Z0-9_]* { VTYPE("CONSTANT", yytext); }
+\"([^"]|\\.)*\" { yylval.strVal = strdup(yytext); return STRING; }
+\'([^']|\\.)*\' {  yylval.strVal = strdup(yytext); return STRING; }
 
 \n {lineNum++;}
 . { fprintf(stderr, "Unknown token '%s'\n", yytext); }
