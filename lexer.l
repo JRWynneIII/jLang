@@ -17,6 +17,7 @@ NUMBER [0-9]+
 {NUMBER} { yylval.intVal = atof(yytext); return NUMBER; }
 [\t ] {}
 "func" { return FUNC; }
+"extern" { return EXTERN; }
 "int" { return INT; }
 "double" { return DOUBLE; }
 "char" { return CHAR; }

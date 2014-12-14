@@ -12,6 +12,8 @@ void yyerror(char const *s) { fprintf(stderr,"ERROR: %s in line %d\n", s, lineNu
 using namespace std;
 %}
 
+%verbose
+
 %union
 {
   int intVal;
@@ -22,7 +24,7 @@ using namespace std;
 
 %token NUMBER FLOAT
 %token STRING ID
-%token FUNC KERNEL FOR IF ELSE ELIF
+%token FUNC KERNEL EXTERN FOR IF ELSE ELIF
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
 %token EQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
@@ -42,6 +44,7 @@ using namespace std;
 %type <str> DOT
 %type <str> EQUAL
 %type <str> FUNC
+%type <str> EXTERN
 %type <str> KERNEL
 %type <str> RARROW
 %type <str> LARROW
@@ -55,30 +58,54 @@ using namespace std;
 
 %%
 program: expressions
+       | funcDef 
+       | extern
 
 expressions: expressions expression
-           | expressions COMMA expression
            | expression
 
-expression: funcDef LBRACE expressions RBRACE { cout << "Full Function defined!\n"; }
-          | varDef
+expression: varDef
+          | binOp
           | NUMBER
           | ID
 
-dataType: INT
-        | DOUBLE
-        | CHAR
-        | STR
+extern: EXTERN funcProto SEMICOLON
+      | EXTERN kernelProto SEMICOLON
+
+dataType: INT { cout << "Datatype set to Int\n"; }
+        | DOUBLE { cout << "Datatype set to Double\n"; }
+        | CHAR { cout << "Datatype set to Char\n"; }
+        | STR { cout << "Datatype set to String\n"; }
 
 varDef: dataType ID SEMICOLON { cout << "Variable Defined!\n"; }
 
-paramDef: dataType ID { cout << "Parameter defined!\n"; }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
-funcDef: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { cout << "Function defined!\n"; }
-       | KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER { cout << "Kernel defined!\n"; }
-       | FUNC ID LPAREN RPAREN RARROW dataType { cout << "Func with no parameters defined!\n"; }
-       | KERNEL ID LPAREN RPAREN LARROW NUMBER { cout << "Kernel with no parameters defined!\n"; }
+paramDef: dataType ID { cout << "Parameter defined!\n"; }
+
+funcDef: funcProto LBRACE expressions RBRACE { cout << "Function defined!\n"; }
+       | kernelProto LBRACE expressions RBRACE { cout << "Kernel defined!\n"; }
+
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType 
+         | FUNC ID LPAREN RPAREN RARROW dataType
+
+kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
+           | KERNEL ID LPAREN RPAREN LARROW NUMBER
+
+%left EQUAL;
+%left LT GT LTE GTE;
+%left PLUS MINUS;
+%left MUL DIV;
+
+binOp: expression EQUAL expression
+     | expression PLUS expression
+     | expression MINUS expression
+     | expression DIV expression
+     | expression MUL expression
+     | expression LT expression
+     | expression GT expression
+     | expression LTE expression
+     | expression GTE expression
 
