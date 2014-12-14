@@ -58,7 +58,8 @@ using namespace std;
 
 %%
 program: expressions
-       | funcDef 
+       | funcDefs
+       | kernelDefs
        | extern
 
 expressions: expressions expression
@@ -79,20 +80,27 @@ dataType: INT { cout << "Datatype set to Int\n"; }
 
 varDef: dataType ID SEMICOLON { cout << "Variable Defined!\n"; }
 
-
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
 paramDef: dataType ID { cout << "Parameter defined!\n"; }
 
 funcDef: funcProto LBRACE expressions RBRACE { cout << "Function defined!\n"; }
-       | kernelProto LBRACE expressions RBRACE { cout << "Kernel defined!\n"; }
 
-funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType 
-         | FUNC ID LPAREN RPAREN RARROW dataType
+funcDefs: funcDefs funcDef
+        | funcDef
+
+kernelDef: kernelProto LBRACE expressions RBRACE { cout << "Kernel defined!\n"; }
+
+kernelDefs: kernelDefs kernelDef
+          | kernelDef
 
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
-           | KERNEL ID LPAREN RPAREN LARROW NUMBER
+           | KERNEL ID LPAREN           RPAREN LARROW NUMBER
+
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType 
+         | FUNC ID LPAREN           RPAREN RARROW dataType
+
 
 %left EQUAL;
 %left LT GT LTE GTE;
@@ -108,4 +116,3 @@ binOp: expression EQUAL expression
      | expression GT expression
      | expression LTE expression
      | expression GTE expression
-
