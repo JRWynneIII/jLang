@@ -18,6 +18,7 @@
 #include <vector>
 #include "tree.h"
 using namespace std;
+using namespace llvm;
 
 static Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
@@ -33,6 +34,7 @@ static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &V
     return TmpB.CreateAlloca(Type::getInt64Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "char")
     return TmpB.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
+  return 0;
 }
 
 Value* IntExprAST::Codegen()
@@ -54,8 +56,23 @@ Value* VariableExprAST::Codegen()
     cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
     exit(EXIT_FAILURE);
   }
-
+  
   return Builder.CreateLoad(V, Name.c_str());
+}
+
+Value* VarInitExprAST::Codegen()
+{
+  AllocaInst* Alloca;
+  if (Type == "int")
+    Alloca = Builder.CreateAlloca(Type::getInt64Ty(getGlobalContext()),0,Name.c_str());
+  if (Type == "double")
+    Alloca = Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()),0,Name.c_str());
+  if (Type == "char")
+    Alloca = Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()),0,Name.c_str());
+  if (Type == "string")
+    Alloca = Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,Name.c_str());
+  NamedValues[Name] = Alloca;
+  return Builder.CreateLoad(NamedValues[Name], Name.c_str());
 }
 
 Value* BinaryExprAST::Codegen()
@@ -100,7 +117,7 @@ Value* BinaryExprAST::Codegen()
     default: break;
   }
   
-  Function *F = TheModule->getFunction(string("binary")+Op);
+  Function *F = theModule->getFunction(string("binary")+Op);
   assert(F && "binary operator not found!");
   
   Value *Ops[] = { L, R };
@@ -110,7 +127,7 @@ Value* BinaryExprAST::Codegen()
 Value* CallExprAST::Codegen()
 {
   //Look up the name in the global module
-  Function* CalleeF = theModule->getFunction(CalleeF);
+  Function* CalleeF = theModule->getFunction(Callee);
   if (CalleeF == 0)
   {
     cerr << "\033[31m ERROR: \033[37m Unknown Function Reference" << endl;
@@ -183,33 +200,46 @@ Function* PrototypeAST::Codegen()
 
     if(!F->empty())
     {
-      cerr << "\033[31m ERROR: \033[37m Redfinition of Function" << F->getName() << endl;
+      cerr << "\033[31m ERROR: \033[37m Redfinition of Function" << endl;
       exit(EXIT_FAILURE);
     }
 
-    if(F->args_size() != Args.size())
+    if(F->arg_size() != Args.size())
     {
-      cerr << "\033[31m ERROR: \033[37m Incorrect number of arguments for Function" << F->getName() << endl;
+      cerr << "\033[31m ERROR: \033[37m Incorrect number of arguments for Function" << endl;
       exit(EXIT_FAILURE);
     }
+  }
 
-    unsigned Idx = 0;
-    for (Function::arg_iterator AI = F->arg_begin(); Idx != Args.size(); ++AI, ++Idx)
-    {
-      NamedValues[Args[Idx]] = AI;
-    }
-    return F;
+  unsigned Idx = 0;
+  for (Function::arg_iterator AI = F->arg_begin(); Idx != Args.size(); ++AI, ++Idx)
+  {
+    AI->setName(Args[Idx]);
+  }
+  return F;
+}
+
+void PrototypeAST::CreateArgumentAllocas(Function *F)
+{
+  //TODO: There needs to be a check of types for the arguments!
+  Function::arg_iterator AI = F->arg_begin();
+  for (unsigned Idx = 0, e = Args.size(); Idx != e; ++Idx, ++AI)
+  {
+    AllocaInst* Alloca = CreateEntryBlockAlloca(F, Args[Idx], "double");
+    Builder.CreateStore(AI,Alloca);
+    NamedValues[Args[Idx]] = Alloca;
+  }
 }
 
 Function* FunctionAST::Codegen()
 {
   NamedValues.clear();
   Function* theFunction = Proto->Codegen();
-  if(TheFunction == 0)
+  if(theFunction == 0)
     return 0;
 
   BasicBlock* BB = BasicBlock::Create(getGlobalContext(),"entry",theFunction);
-  Builder.SetEntryPoint(BB);
+  Builder.SetInsertPoint(BB);
 
   if(Value* RetVal = Body->Codegen())
   {

@@ -3,6 +3,7 @@
 #include<vector>
 #include<stdlib.h>
 using namespace std;
+using namespace llvm;
 
 class ExprAST 
 {
@@ -33,7 +34,7 @@ class IntExprAST : public ExprAST
 {
   int Val;
 public:
-  NumberExprAST(double val) : Val(val) {}
+  IntExprAST(double val) : Val(val) {}
   virtual Value *Codegen();
 };
 
@@ -41,17 +42,28 @@ class DoubleExprAST : public ExprAST
 {
   double Val;
 public:
-  NumberExprAST(double val) : Val(val) {}
+  DoubleExprAST(double val) : Val(val) {}
   virtual Value *Codegen();
 };
 
 class VariableExprAST : public ExprAST 
 {
   string Name;
-  string type;
+  string Type;
 public:
-  VariableExprAST(const string &name) : Name(name) {}
+  VariableExprAST(const string &name, const string &type) : Name(name), Type(type) {}
+  const string &getName() const { return Name; }
   virtual Value *Codegen();
+};
+
+class VarInitExprAST : public ExprAST
+{
+  string Name;
+  string Type;
+public:
+  VarInitExprAST(const string &name, const string &type) : Name(name), Type(type) {}
+  const string &getName() const { return Name; }
+  virtual Value* Codegen();
 };
 
 class BinaryExprAST : public ExprAST 
@@ -83,6 +95,7 @@ public:
     : Name(name), Args(args) {}
   
   Function *Codegen();
+  void CreateArgumentAllocas(Function *F);
 };
 
 class FunctionAST 
