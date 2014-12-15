@@ -9,11 +9,15 @@ extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
 extern int lineNum;
-void yyerror(char const *s) { fprintf(stderr,"ERROR: %s in line %d\n", s, lineNum); }
 using namespace std;
+void yyerror(char const *s) 
+{ 
+  cerr << "\033[31m ERROR: \033[37m" << s << " in line: " << lineNum << endl;
+//  fprintf(stderr,"ERROR: %s in line %d\n", s, lineNum); 
+}
 %}
 
-%verbose
+%error-verbose
 
 %union
 {
@@ -75,14 +79,16 @@ expression: varDef
           | modImport
           | extern
           | funcCall
+          | forLoop
+          | ifBranch
           | binOp
           | NUMBER
           | ID
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 
-funcCall: ID LPAREN paramDefs RPAREN SEMICOLON { cout << "Calling func " << $1 << endl; }
-        | ID LPAREN RPAREN SEMICOLON { cout << "Calling func " << $1 << endl; }
+funcCall: ID LPAREN paramDefs RPAREN { cout << "Calling func " << $1 << endl; }
+        | ID LPAREN RPAREN { cout << "Calling func " << $1 << endl; }
 
 extern: EXTERN funcProto SEMICOLON
       | EXTERN kernelProto SEMICOLON
@@ -101,6 +107,15 @@ paramDef: dataType ID { cout << "Parameter defined!\n"; }
 
 block: LBRACE expressions RBRACE
      | LBRACE RBRACE
+
+forLoop: FOR ID EQUAL expression COMMA expression block
+       | FOR ID EQUAL expression COMMA expression COMMA expression block 
+
+elseBranch: ELSE block
+          | ELIF block elseBranch
+
+ifBranch: IF expression block 
+        | IF expression block elseBranch
 
 funcDef: funcProto block { cout << "Function defined!\n"; }
 
