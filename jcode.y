@@ -25,51 +25,64 @@ using namespace std;
 
 %token NUMBER FLOAT
 %token STRING ID
-%token FUNC KERNEL EXTERN FOR IF ELSE ELIF
+%token FUNC KERNEL EXTERN FOR IF ELSE ELIF MODULE
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
 %token EQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
 
+%left EQUAL;
+%left LT GT LTE GTE;
+%left PLUS MINUS;
+%left MUL DIV;
+
 %type <intVal> NUMBER
 %type <doubleVal> DOUBLE
-%type <str> CAROT
-%type <str> AT
-%type <str> CHAR
-%type <str> STR 
-%type <str> STRING
-%type <str> SEMICOLON
-%type <str> PLUS
-%type <str> MINUS
-%type <str> DIV
-%type <str> MUL
-%type <str> DOT
-%type <str> EQUAL
-%type <str> FUNC
-%type <str> EXTERN
-%type <str> KERNEL
-%type <str> RARROW
-%type <str> LARROW
-%type <str> LBRACE
-%type <str> LPAREN
-%type <str> RPAREN
-%type <str> RBRACE
-%type <str> ID
+%type <strVal> CAROT
+%type <strVal> AT
+%type <strVal> CHAR
+%type <strVal> STR 
+%type <strVal> STRING
+%type <strVal> SEMICOLON
+%type <strVal> PLUS
+%type <strVal> MINUS
+%type <strVal> DIV
+%type <strVal> MUL
+%type <strVal> DOT
+%type <strVal> EQUAL
+%type <strVal> FUNC
+%type <strVal> MODULE
+%type <strVal> EXTERN
+%type <strVal> KERNEL
+%type <strVal> RARROW
+%type <strVal> LARROW
+%type <strVal> LBRACE
+%type <strVal> LPAREN
+%type <strVal> RPAREN
+%type <strVal> RBRACE
+%type <strVal> ID
 
 %start program
 
 %%
 program: expressions
-       | funcDefs
-       | kernelDefs
-       | extern
 
 expressions: expressions expression
            | expression
 
 expression: varDef
+          | funcDef
+          | kernelDef
+          | modImport
+          | extern
+          | funcCall
           | binOp
           | NUMBER
           | ID
+
+modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
+
+funcCall: ID LPAREN paramDefs RPAREN SEMICOLON { cout << "Calling func " << $1 << endl; }
+        | ID LPAREN RPAREN SEMICOLON { cout << "Calling func " << $1 << endl; }
 
 extern: EXTERN funcProto SEMICOLON
       | EXTERN kernelProto SEMICOLON
@@ -79,22 +92,19 @@ dataType: INT { cout << "Datatype set to Int\n"; }
         | CHAR { cout << "Datatype set to Char\n"; }
         | STR { cout << "Datatype set to String\n"; }
 
-varDef: dataType ID SEMICOLON { cout << "Variable Defined!\n"; }
+varDef: dataType ID { cout << "Variable Defined!\n"; }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
 paramDef: dataType ID { cout << "Parameter defined!\n"; }
 
-funcDef: funcProto LBRACE expressions RBRACE { cout << "Function defined!\n"; }
+block: LBRACE expressions RBRACE
+     | LBRACE RBRACE
 
-funcDefs: funcDefs funcDef
-        | funcDef
+funcDef: funcProto block { cout << "Function defined!\n"; }
 
-kernelDef: kernelProto LBRACE expressions RBRACE { cout << "Kernel defined!\n"; }
-
-kernelDefs: kernelDefs kernelDef
-          | kernelDef
+kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
            | KERNEL ID LPAREN           RPAREN LARROW NUMBER
@@ -102,13 +112,7 @@ kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER
 funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType 
          | FUNC ID LPAREN           RPAREN RARROW dataType
 
-
-%left EQUAL;
-%left LT GT LTE GTE;
-%left PLUS MINUS;
-%left MUL DIV;
-
-binOp: expression EQUAL expression
+binOp: ID EQUAL expression
      | expression PLUS expression
      | expression MINUS expression
      | expression DIV expression
