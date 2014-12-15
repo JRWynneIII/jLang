@@ -1,3 +1,4 @@
+%require "3.0"
 %{
 #include<stdio.h>
 #include<iostream>
