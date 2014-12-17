@@ -1,4 +1,4 @@
-SRC= ast.cpp jcode.tab.c lex.yy.c
+SRC= jcode.tab.c lex.yy.c ast.cpp 
 all: jlangc
 
 jlangc: ${SRC} 

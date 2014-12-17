@@ -25,6 +25,8 @@ using namespace llvm;
 
 extern FILE* yyin;
 
+ExprAST* RootNode;
+
 static Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
 static map<string, AllocaInst*> NamedValues;
