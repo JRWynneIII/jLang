@@ -108,3 +108,7 @@ public:
   
   Function *Codegen();
 };
+
+static void createfuncDef(FunctionAST* F);
+static void createExtern(PrototypeAST* P);
+static void createTLE(FunctionAST* F);

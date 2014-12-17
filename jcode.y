@@ -3,13 +3,15 @@
 #include<stdio.h>
 #include<iostream>
 #include<map>
-std::map<std::string,double> varTable;
-std::map<std::string,std::string> varStringTbl;
+std::map<std::string,Value*> varTable;
+std::vector<string> args;
+extern stack<ExprAST*> parseStack;
 extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
 extern int lineNum;
 using namespace std;
+PrototypeAST* tempProto;
 void yyerror(char const *s) 
 { 
   cerr << "\033[31m ERROR: \033[37m" << s << " in line: " << lineNum << endl;
@@ -103,7 +105,7 @@ varDef: dataType ID { cout << "Variable Defined!\n"; }
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
-paramDef: dataType ID { cout << "Parameter defined!\n"; }
+paramDef: dataType ID { args.push_back($1); cout << "Parameter defined!" << $1 << "\n"; }
 
 block: LBRACE expressions RBRACE
      | LBRACE RBRACE
@@ -117,15 +119,15 @@ elseBranch: ELSE block
 ifBranch: IF expression block 
         | IF expression block elseBranch
 
-funcDef: funcProto block { cout << "Function defined!\n"; }
+funcDef: funcProto block { parseStack.push(new FunctionAST(tempProto, ); cout << "Function defined!\n"; }
 
 kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 
-kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
-           | KERNEL ID LPAREN           RPAREN LARROW NUMBER
+kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER { tempProto = new PrototypeAST($2,&args); args.clear(); }
+           | KERNEL ID LPAREN           RPAREN LARROW NUMBER { tempProto = new PrototypeAST($2,NULL); } 
 
-funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType 
-         | FUNC ID LPAREN           RPAREN RARROW dataType
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { tempProto = new PrototypeAST($2, &args); args.clear(); }
+         | FUNC ID LPAREN           RPAREN RARROW dataType { tempProto = new PrototypeAST($2,NULL); }
 
 binOp: ID EQUAL expression
      | expression PLUS expression

@@ -16,9 +16,14 @@
 #include <map>
 #include <string>
 #include <vector>
+#include<stdio.h>
+#include<stdlib.h>
+#include "jcode.tab.h"
 #include "tree.h"
 using namespace std;
 using namespace llvm;
+
+extern FILE* yyin;
 
 static Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
@@ -253,4 +258,25 @@ Function* FunctionAST::Codegen()
   return 0;
 }
 
+int main(int argc, char*argv[])
+{
+  LLVMContext &Context = getGlobalContext();
+  theModule = new Module("jlangc", Context);
 
+  FunctionPassManager opt(theModule);
+  opt.add(createBasicAliasAnalysisPass());
+  opt.add(createPromoteMemoryToRegisterPass());
+  opt.add(createInstructionCombiningPass());
+  opt.add(createReassociatePass());
+  opt.add(createGVNPass());
+  opt.add(createCFGSimplificationPass());
+  opt.doInitialization();
+  
+  if (argc >1)
+    yyin = fopen(argv[1],"r");
+  yyparse();
+
+  theModule->dump();
+
+  return EXIT_SUCCESS;
+}

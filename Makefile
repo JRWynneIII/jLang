@@ -1,8 +1,8 @@
-SRC=main.c jcode.tab.c lex.yy.c
+SRC= ast.cpp jcode.tab.c lex.yy.c
 all: jlangc
 
-jlangc: ${SRC}
-	g++ -o jlangc ${SRC}
+jlangc: ${SRC} 
+	clang++ -g ${SRC} `llvm-config --cppflags --ldflags --libs core jit native` -O3 -o jlangc
 
 lex.yy.c: lexer.l
 	flex lexer.l
