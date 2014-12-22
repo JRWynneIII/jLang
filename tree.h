@@ -24,6 +24,14 @@ public:
   virtual Value *Codegen() = 0;
 };
 
+class identExprAST : public ExprAST
+{
+public:
+  string Name;
+  identExprAST(const string& name) : Name(name) {}
+  virtual Value* Codegen() = 0;
+};
+
 class ForExprAST : public ExprAST
 {
   string VarName;
@@ -113,9 +121,9 @@ public:
 class FunctionAST 
 {
   PrototypeAST *Proto;
-  ExprAST *Body;
+  vector<ExprAST*> Body;
 public:
-  FunctionAST(PrototypeAST *proto, ExprAST *body)
+  FunctionAST(PrototypeAST *proto, vector<ExprAST*>& body)
     : Proto(proto), Body(body) {}
   
   Function *Codegen();

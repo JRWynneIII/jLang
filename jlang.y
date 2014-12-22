@@ -7,6 +7,7 @@
 std::map<std::string,double> varTable;
 std::map<std::string,std::string> varStringTbl;
 std::vector<VarInitExprAST*> args;
+std::vector<ExprAST*> lines;
 extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
@@ -30,6 +31,12 @@ void yyerror(char const *s)
     char charVal;
     double doubleVal;
     char* strVal;
+    VarInitExprAST* varInit;
+    FunctionAST* fdef;
+    PrototypeAST* proto;
+    CallExprAST* funcCall;
+    IfExprAST* _if;
+    BinaryOpExprAST* bo;
   };
 };
 
@@ -73,6 +80,12 @@ void yyerror(char const *s)
 %type <strVal> ID
 
 %type <strVal> dataType 
+%type <varInit> varDef
+%type <proto> funcDef
+%type <proto> funcProto
+%type <fcall> funcCall
+%type <_if> ifBranch
+%type <bo> binOp
 
 %start program
 
@@ -82,17 +95,16 @@ program: expressions
 expressions: expressions expression
            | expression
 
-expression: varDef END
-          | funcDef END
+expression: varDef END { lines.push_back($1); lines.clear(); }
+          | funcDef END { createFuncDef(new FunctionAST($1,lines); lines.clear(); }
           | kernelDef END
           | modImport END
           | extern END
-          | funcCall END
-          | forLoop END
-          | ifBranch END
-          | binOp END
-          | NUMBER END
-          | ID END
+          | funcCall END { lines.push_back($1); }
+          | ifBranch END { lines.push_back($1); }
+          | binOp END { lines.push_back($1); }
+          | NUMBER END { lines.push_back($1); }
+          | ID END { lines.push_back($1); }
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 
@@ -112,29 +124,29 @@ varDef: dataType ID { createVarDef(new VarInitExprAST($2,$1)); cout << "Variable
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
-paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1); /*args.push_back(temp);*/ createVarDef(temp); cout << "Parameter defined!\n"; }
+paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1); args.push_back(temp); createVarDef(temp); cout << "Parameter defined!\n"; }
 
 block: LBRACE expressions RBRACE
      | LBRACE RBRACE
 
-forLoop: FOR ID EQUAL expression COMMA expression block
+/*forLoop: FOR ID EQUAL expression COMMA expression block
        | FOR ID EQUAL expression COMMA expression COMMA expression block 
-
+*/
 elseBranch: ELSE block
           | ELIF block elseBranch
 
 ifBranch: IF expression block 
         | IF expression block elseBranch
 
-funcDef: funcProto block { cout << "Function defined!\n"; }
+funcDef: funcProto block { $$ = $1; cout << "Function defined!\n"; }
 
 kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
            | KERNEL ID LPAREN           RPAREN LARROW NUMBER
 
-funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType 
-         | FUNC ID LPAREN           RPAREN RARROW dataType
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args); args.clear(); }
+         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,NULL); args.clear(); }
 
 binOp: ID EQUAL expression
      | expression PLUS expression

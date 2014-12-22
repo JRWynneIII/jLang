@@ -41,6 +41,8 @@ static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &V
     return TmpB.CreateAlloca(Type::getInt64Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "char")
     return TmpB.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
+  else if (type == "string")
+    return TmpB.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,VarName.c_str());
   return 0;
 }
 
@@ -70,15 +72,11 @@ Value* VariableExprAST::Codegen()
 Value* VarInitExprAST::Codegen()
 {
   AllocaInst* Alloca;
-  if (Type == "int")
-    Alloca = Builder.CreateAlloca(Type::getInt64Ty(getGlobalContext()),0,Name.c_str());
-  if (Type == "double")
-    Alloca = Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()),0,Name.c_str());
-  if (Type == "char")
-    Alloca = Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()),0,Name.c_str());
-  if (Type == "string")
-    Alloca = Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,Name.c_str());
+  vector<AllocaInst* > oldBindings;
+  Function* theFunction = Builder.GetInsertBlock()->getParent();
+  Alloca = CreateEntryBlockAlloca(theFunction, Name, Type);
   NamedValues[Name] = Alloca;
+
   return Builder.CreateLoad(NamedValues[Name], Name.c_str());
 }
 
@@ -248,9 +246,18 @@ Function* FunctionAST::Codegen()
   BasicBlock* BB = BasicBlock::Create(getGlobalContext(),"entry",theFunction);
   Builder.SetInsertPoint(BB);
 
-  if(Value* RetVal = Body->Codegen())
+  vector::iterator it = Body.begin();
+  Value* last = NULL;
+  for(it; it != Body.end(); ++it)
   {
-    Builder.CreateRet(RetVal);
+    last = it->Codegen();
+    if (!last)
+      break;
+  }
+  
+  if(last)
+  {
+    Builder.CreateRet(last);
     verifyFunction(*theFunction);
     theFPM->run(*theFunction);
     return theFunction;
