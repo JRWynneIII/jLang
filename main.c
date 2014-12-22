@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include "jcode.tab.h"
+#include "jlang.tab.hpp"
 #include "tree.h"
 
 extern FILE* yyin;

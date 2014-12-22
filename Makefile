@@ -1,4 +1,4 @@
-SRC= handler.cpp jlang.tab.c lex.yy.c ast.cpp 
+SRC= handler.cpp jlang.tab.cpp lex.yy.c ast.cpp 
 all: jlangc
 
 jlangc: ${SRC} 
@@ -7,7 +7,7 @@ jlangc: ${SRC}
 lex.yy.c: lexer.l
 	flex lexer.l
 
-jlang.tab.c: jlang.y
-	bison -d jlang.y
+jlang.tab.cpp: jlang.ypp
+	bison -d jlang.ypp
 clean:
-	rm -rf lex.yy.c jlangc jlang.tab.c jlang.tab.h
+	rm -rf lex.yy.c jlangc jlang.tab.cpp jlang.tab.h
