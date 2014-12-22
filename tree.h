@@ -1,3 +1,5 @@
+#ifndef TREE_H
+#define TREE_H
 #include<iostream>
 #include<map>
 #include<vector>
@@ -133,3 +135,4 @@ void createfuncDef(FunctionAST* F);
 void createExtern(PrototypeAST* P);
 void createTLE(FunctionAST* F);
 void createVarDef(VarInitExprAST* V);
+#endif

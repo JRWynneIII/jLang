@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "jlang.tab.h"
+#include "tree.h"
 using namespace std;
 int lineNum = 1;
 %}

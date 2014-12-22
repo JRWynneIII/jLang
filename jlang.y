@@ -36,7 +36,7 @@ void yyerror(char const *s)
     PrototypeAST* proto;
     CallExprAST* funcCall;
     IfExprAST* _if;
-    BinaryOpExprAST* bo;
+    BinaryExprAST* bo;
   };
 };
 
@@ -96,7 +96,7 @@ expressions: expressions expression
            | expression
 
 expression: varDef END { lines.push_back($1); lines.clear(); }
-          | funcDef END { createFuncDef(new FunctionAST($1,lines); lines.clear(); }
+          | funcDef END { createFuncDef(new FunctionAST($1,lines)); lines.clear(); }
           | kernelDef END
           | modImport END
           | extern END
