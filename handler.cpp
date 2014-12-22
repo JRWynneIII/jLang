@@ -18,16 +18,16 @@
 #include <vector>
 #include<stdio.h>
 #include<stdlib.h>
-#include "jcode.tab.h"
+#include "jlang.tab.h"
 #include "tree.h"
 using namespace std;
 using namespace llvm;
 
-stack<ExprAST*> parseStack;
 
-static void createfuncDef(FunctionAST* F)
+void createfuncDef(FunctionAST* F)
 {
-  if(Function* func != F->Codegen())
+  Function* func = F->Codegen();
+  if(!func)
   {
     cerr << "\033[31m ERROR: \033[37m Error in reading function " << endl;
     exit(EXIT_FAILURE);
@@ -35,9 +35,10 @@ static void createfuncDef(FunctionAST* F)
   func->dump();
 }
 
-static void createExtern(PrototypeAST* P)
+void createExtern(PrototypeAST* P)
 {
-  if(Function* func != P->Codegen())
+  Function* func = P->Codegen();
+  if(!func)
   {
     cerr << "\033[31m ERROR: \033[37m Error in declaring extern " << endl;
     exit(EXIT_FAILURE);
@@ -45,12 +46,24 @@ static void createExtern(PrototypeAST* P)
   func->dump();
 }
 
-static void createTLE(FunctionAST* F)
+void createTLE(FunctionAST* F)
 {
-  if(Function* func != F->Codegen())
+  Function* func = F->Codegen();
+  if(!func)
   {
     cerr << "\033[31m ERROR: \033[37m Error in TLE " << endl;
     exit(EXIT_FAILURE);
   }
   func->dump(); 
+}
+
+void createVarDef(VarInitExprAST* V)
+{
+  Value* F = V->Codegen();
+  if (!F)
+  {
+    cerr << "\033[31m ERROR: \033[37m Error creating variable " << endl;
+    exit(EXIT_FAILURE);
+  }
+  F->dump();
 }

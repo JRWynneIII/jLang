@@ -18,7 +18,7 @@
 #include <vector>
 #include<stdio.h>
 #include<stdlib.h>
-#include "jcode.tab.h"
+#include "jlang.tab.h"
 #include "tree.h"
 using namespace std;
 using namespace llvm;

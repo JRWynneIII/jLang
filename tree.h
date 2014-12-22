@@ -22,7 +22,6 @@ class ExprAST
 public:
   virtual ~ExprAST() {}
   virtual Value *Codegen() = 0;
-  ExprAST* Next = NULL;
 };
 
 class ForExprAST : public ExprAST
@@ -122,6 +121,7 @@ public:
   Function *Codegen();
 };
 
-static void createfuncDef(FunctionAST* F);
-static void createExtern(PrototypeAST* P);
-static void createTLE(FunctionAST* F);
+void createfuncDef(FunctionAST* F);
+void createExtern(PrototypeAST* P);
+void createTLE(FunctionAST* F);
+void createVarDef(VarInitExprAST* V);
