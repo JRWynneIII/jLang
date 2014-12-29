@@ -38,7 +38,7 @@ static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &V
   if (type == "double")
     return TmpB.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "int")
-    return TmpB.CreateAlloca(Type::getInt64Ty(getGlobalContext()), 0, VarName.c_str());
+    return TmpB.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "char")
     return TmpB.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "string")
@@ -48,7 +48,7 @@ static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &V
 
 Value* IntExprAST::Codegen()
 {
-  return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), Val);
+  return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), Val);
 }
 
 Value* DoubleExprAST::Codegen()
@@ -82,6 +82,20 @@ Value* VarInitExprAST::Codegen()
 
 Value* BinaryExprAST::Codegen()
 {
+//  string t,t2;
+//  if (typeid(LHS->Val).name == "int")
+//    t = "int";
+//  else if (typeid(LHS->Val).name() == "double")
+//    t = "double";
+//  if (typeid(RHS->Val).name() == "int")
+//    t2 = "int";
+//  else if (typeid(RHS->Val).name() == "double")
+//    t2 = "double";
+//  if (t != t2)
+//  {
+//    cerr << "\033[31m ERROR: \033[37m Type conflict in BinOp" << endl;
+//    exit(EXIT_FAILURE);
+//  }
   if(Op == '=')
   {
     VariableExprAST* LHSE = dynamic_cast<VariableExprAST*>(LHS);
@@ -195,9 +209,24 @@ Value* IfExprAST::Codegen()
 Function* PrototypeAST::Codegen()
 {
   vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
-  FunctionType* FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()),Doubles,false);
-  Function* F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
-
+  vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
+  FunctionType* FT;
+  Function* F;
+  if (Args.empty())
+  {
+    if (Ty == "double")
+      FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()),false);
+    else if (Ty == "int")
+      FT = FunctionType::get(Type::getInt32Ty(getGlobalContext()),false);
+  }
+  else 
+  {
+    if (Ty == "double")
+      FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()),Doubles,false);
+    else if (Ty == "int")
+      FT = FunctionType::get(Type::getInt32Ty(getGlobalContext()),Ints,false);
+  }
+  F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
   if(F->getName() != Name)
   {
     F->eraseFromParent();
@@ -217,9 +246,12 @@ Function* PrototypeAST::Codegen()
   }
 
   unsigned Idx = 0;
-  for (Function::arg_iterator AI = F->arg_begin(); Idx != Args.size(); ++AI, ++Idx)
+  if (!Args.empty())
   {
-    AI->setName(Args[Idx]);
+    for (Function::arg_iterator AI = F->arg_begin(); Idx != Args.size(); ++AI, ++Idx)
+    {
+      AI->setName(Args[Idx]->getName());
+    }
   }
   return F;
 }
@@ -230,9 +262,9 @@ void PrototypeAST::CreateArgumentAllocas(Function *F)
   Function::arg_iterator AI = F->arg_begin();
   for (unsigned Idx = 0, e = Args.size(); Idx != e; ++Idx, ++AI)
   {
-    AllocaInst* Alloca = CreateEntryBlockAlloca(F, Args[Idx], "double");
+    AllocaInst* Alloca = CreateEntryBlockAlloca(F, Args[Idx]->getName(), "double");
     Builder.CreateStore(AI,Alloca);
-    NamedValues[Args[Idx]] = Alloca;
+    NamedValues[Args[Idx]->getName()] = Alloca;
   }
 }
 
@@ -246,11 +278,11 @@ Function* FunctionAST::Codegen()
   BasicBlock* BB = BasicBlock::Create(getGlobalContext(),"entry",theFunction);
   Builder.SetInsertPoint(BB);
 
-  vector::iterator it = Body.begin();
-  Value* last = NULL;
-  for(it; it != Body.end(); ++it)
+  vector<ExprAST*>::iterator it = Body.begin();
+  Value* last;
+  for(it = Body.begin(); it != Body.end(); ++it)
   {
-    last = it->Codegen();
+    last = (*it)->Codegen();
     if (!last)
       break;
   }
@@ -272,6 +304,11 @@ int main(int argc, char*argv[])
   LLVMContext &Context = getGlobalContext();
   theModule = new Module("jlangc", Context);
 
+  
+  if (argc >1)
+    yyin = fopen(argv[1],"r");
+  yyparse();
+
   FunctionPassManager opt(theModule);
   opt.add(createBasicAliasAnalysisPass());
   opt.add(createPromoteMemoryToRegisterPass());
@@ -280,11 +317,6 @@ int main(int argc, char*argv[])
   opt.add(createGVNPass());
   opt.add(createCFGSimplificationPass());
   opt.doInitialization();
-  
-  if (argc >1)
-    yyin = fopen(argv[1],"r");
-  yyparse();
-
   theModule->dump();
 
   return EXIT_SUCCESS;

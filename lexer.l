@@ -5,7 +5,7 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
-#include "jlang.tab.h"
+#include "jlang.tab.hpp"
 #include "tree.h"
 using namespace std;
 int lineNum = 1;
@@ -63,5 +63,5 @@ NUMBER [0-9]+
 \"([^"]|\\.)*\" { yylval.strVal = strdup(yytext); return STRING; }
 \'([^']|\\.)*\' {  yylval.strVal = strdup(yytext); return STRING; }
 
-\n {lineNum++; return END; }
+\n {lineNum++; /*return END;*/ }
 . { fprintf(stderr, "Unknown token '%s'\n", yytext); }

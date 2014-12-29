@@ -54,16 +54,16 @@ public:
 
 class IntExprAST : public ExprAST 
 {
-  int Val;
 public:
+  int Val;
   IntExprAST(double val) : Val(val) {}
   virtual Value *Codegen();
 };
 
 class DoubleExprAST : public ExprAST 
 {
-  double Val;
 public:
+  double Val;
   DoubleExprAST(double val) : Val(val) {}
   virtual Value *Codegen();
 };
@@ -111,10 +111,12 @@ public:
 class PrototypeAST 
 {
   string Name;
-  vector<string> Args;
+  vector<VarInitExprAST*> Args;
+  string Ty;
 public:
-  PrototypeAST(const string &name, const vector<std::string> &args)
-    : Name(name), Args(args) {}
+  PrototypeAST(const string &name, const vector<VarInitExprAST*> &args, const string& type)
+    : Name(name), Args(args), Ty(type) {}
+  string getType() { return Ty; }
   
   Function *Codegen();
   void CreateArgumentAllocas(Function *F);
@@ -135,4 +137,5 @@ void createfuncDef(FunctionAST* F);
 void createExtern(PrototypeAST* P);
 void createTLE(FunctionAST* F);
 void createVarDef(VarInitExprAST* V);
+void createBinOp(BinaryExprAST* V);
 #endif

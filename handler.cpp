@@ -67,3 +67,14 @@ void createVarDef(VarInitExprAST* V)
   }
   F->dump();
 }
+
+void createBinOp(BinaryExprAST* V)
+{
+  Value* F = V->Codegen();
+  if (!F)
+  {
+    cerr << "\033[31m ERROR: \033[37m Error creating Binary Operator" << endl;
+    exit(EXIT_FAILURE);
+  }
+  F->dump();
+}
