@@ -32,17 +32,17 @@ static IRBuilder<> Builder(getGlobalContext());
 static map<string, AllocaInst*> NamedValues;
 static FunctionPassManager *theFPM;
 
-static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const string &VarName, string type) 
+static AllocaInst *CreateEntryBlockAlloca(/*Function *TheFunction,*/ const string &VarName, string type) 
 {
-  IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
+  //IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
   if (type == "double")
-    return TmpB.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "int")
-    return TmpB.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "char")
-    return TmpB.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "string")
-    return TmpB.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,VarName.c_str());
+    return Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,VarName.c_str());
   return 0;
 }
 
@@ -73,11 +73,22 @@ Value* VarInitExprAST::Codegen()
 {
   AllocaInst* Alloca;
   vector<AllocaInst* > oldBindings;
-  Function* theFunction = Builder.GetInsertBlock()->getParent();
-  Alloca = CreateEntryBlockAlloca(theFunction, Name, Type);
-  NamedValues[Name] = Alloca;
 
-  return Builder.CreateLoad(NamedValues[Name], Name.c_str());
+  //FunctionType* FT = FunctionType::get(Builder.getDoubleTy(),false);
+  Function* F = Builder.GetInsertBlock()->getParent();//Function::Create(FT ,Function::CommonLinkage,Name,theModule);// Builder.GetInsertBlock();
+
+  Value* Initial;
+  if(Initd) //if initialized
+    Initial = Initd->Codegen();
+  else
+  {
+    if (Type == "double")
+      Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
+    else if (Type == "int")
+      Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+  }
+  Alloca = CreateEntryBlockAlloca(Name,Type);
+  return Builder.CreateStore(Initial,Alloca);
 }
 
 Value* BinaryExprAST::Codegen()
@@ -116,12 +127,15 @@ Value* BinaryExprAST::Codegen()
       return Builder.CreateFSub(L, R, "subtmp");
     case '*': 
       return Builder.CreateFMul(L, R, "multmp");    
+    case '/':
+      return Builder.CreateFDiv(L, R, "divtmp");
     case '<':
       L = Builder.CreateFCmpULT(L, R, "cmptmp");
       return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
     default: break;
   }
   
+  //if theres a custom binary op defined, get it.
   Function *F = theModule->getFunction(string("binary")+Op);
   assert(F && "binary operator not found!");
   
@@ -250,7 +264,7 @@ void PrototypeAST::CreateArgumentAllocas(Function *F)
   Function::arg_iterator AI = F->arg_begin();
   for (unsigned Idx = 0, e = Args.size(); Idx != e; ++Idx, ++AI)
   {
-    AllocaInst* Alloca = CreateEntryBlockAlloca(F, Args[Idx]->getName(), "double");
+    AllocaInst* Alloca = CreateEntryBlockAlloca( Args[Idx]->getName(), "double");
     Builder.CreateStore(AI,Alloca);
     NamedValues[Args[Idx]->getName()] = Alloca;
   }
@@ -272,7 +286,10 @@ Function* FunctionAST::Codegen()
   {
     last = (*it)->Codegen();
     if (!last)
+    {
+      cout << "not last\n";
       break;
+    }
   }
   
   if(last)

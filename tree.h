@@ -82,8 +82,9 @@ class VarInitExprAST : public ExprAST
 {
   string Name;
   string Type;
+  ExprAST* Initd;
 public:
-  VarInitExprAST(const string &name, const string &type) : Name(name), Type(type) {}
+  VarInitExprAST(const string &name, const string &type, ExprAST* initd) : Name(name), Type(type), Initd(initd) {}
   const string &getName() const { return Name; }
   virtual Value* Codegen();
 };
@@ -92,9 +93,10 @@ class BinaryExprAST : public ExprAST
 {
   char Op;
   ExprAST *LHS, *RHS;
+  string Var;
 public:
-  BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) 
-    : Op(op), LHS(lhs), RHS(rhs) {}
+  BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) : Op(op), LHS(lhs), RHS(rhs) {}
+  BinaryExprAST(char op, const string& var, ExprAST *rhs) : Op(op), Var(var), RHS(rhs) {}
   virtual Value *Codegen();
 };
 
