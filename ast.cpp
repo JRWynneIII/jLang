@@ -210,21 +210,23 @@ Function* PrototypeAST::Codegen()
 {
   vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
   vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
+  ArrayRef<Type*> argsRefD(Doubles);
+  ArrayRef<Type*> argsRefI(Ints);
   FunctionType* FT;
   Function* F;
   if (Args.empty())
   {
     if (Ty == "double")
-      FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()),false);
+      FT = FunctionType::get(Builder.getDoubleTy(),false);
     else if (Ty == "int")
-      FT = FunctionType::get(Type::getInt32Ty(getGlobalContext()),false);
+      FT = FunctionType::get(Builder.getInt32Ty(),false);
   }
   else 
   {
     if (Ty == "double")
-      FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()),Doubles,false);
+      FT = FunctionType::get(Builder.getDoubleTy(),argsRefD,false);
     else if (Ty == "int")
-      FT = FunctionType::get(Type::getInt32Ty(getGlobalContext()),Ints,false);
+      FT = FunctionType::get(Builder.getInt32Ty(),argsRefI,false);
   }
   F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
   if(F->getName() != Name)
@@ -291,7 +293,7 @@ Function* FunctionAST::Codegen()
   {
     Builder.CreateRet(last);
     verifyFunction(*theFunction);
-    theFPM->run(*theFunction);
+  //  theFPM->run(*theFunction);
     return theFunction;
   }
   //If it gets here there's an error! erase the function

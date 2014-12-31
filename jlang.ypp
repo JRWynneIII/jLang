@@ -153,8 +153,8 @@ kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
            | KERNEL ID LPAREN           RPAREN LARROW NUMBER
 
-funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); }
-         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$5); args.clear(); }
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear(); }
+         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); }
 
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
