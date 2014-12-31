@@ -32,9 +32,8 @@ static IRBuilder<> Builder(getGlobalContext());
 static map<string, AllocaInst*> NamedValues;
 static FunctionPassManager *theFPM;
 
-static AllocaInst *CreateEntryBlockAlloca(/*Function *TheFunction,*/ const string &VarName, string type) 
+static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
 {
-  //IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
   if (type == "double")
     return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "int")
@@ -74,8 +73,7 @@ Value* VarInitExprAST::Codegen()
   AllocaInst* Alloca;
   vector<AllocaInst* > oldBindings;
 
-  //FunctionType* FT = FunctionType::get(Builder.getDoubleTy(),false);
-  Function* F = Builder.GetInsertBlock()->getParent();//Function::Create(FT ,Function::CommonLinkage,Name,theModule);// Builder.GetInsertBlock();
+  Function* F = Builder.GetInsertBlock()->getParent();
 
   Value* Initial;
   if(Initd) //if initialized
@@ -286,10 +284,7 @@ Function* FunctionAST::Codegen()
   {
     last = (*it)->Codegen();
     if (!last)
-    {
-      cout << "not last\n";
       break;
-    }
   }
   
   if(last)
