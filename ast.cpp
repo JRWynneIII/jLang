@@ -82,20 +82,6 @@ Value* VarInitExprAST::Codegen()
 
 Value* BinaryExprAST::Codegen()
 {
-//  string t,t2;
-//  if (typeid(LHS->Val).name == "int")
-//    t = "int";
-//  else if (typeid(LHS->Val).name() == "double")
-//    t = "double";
-//  if (typeid(RHS->Val).name() == "int")
-//    t2 = "int";
-//  else if (typeid(RHS->Val).name() == "double")
-//    t2 = "double";
-//  if (t != t2)
-//  {
-//    cerr << "\033[31m ERROR: \033[37m Type conflict in BinOp" << endl;
-//    exit(EXIT_FAILURE);
-//  }
   if(Op == '=')
   {
     VariableExprAST* LHSE = dynamic_cast<VariableExprAST*>(LHS);
@@ -311,14 +297,14 @@ int main(int argc, char*argv[])
     yyin = fopen(argv[1],"r");
   yyparse();
 
-  FunctionPassManager opt(theModule);
-  opt.add(createBasicAliasAnalysisPass());
-  opt.add(createPromoteMemoryToRegisterPass());
-  opt.add(createInstructionCombiningPass());
-  opt.add(createReassociatePass());
-  opt.add(createGVNPass());
-  opt.add(createCFGSimplificationPass());
-  opt.doInitialization();
+//  FunctionPassManager opt(theModule);
+//  opt.add(createBasicAliasAnalysisPass());
+//  opt.add(createPromoteMemoryToRegisterPass());
+//  opt.add(createInstructionCombiningPass());
+//  opt.add(createReassociatePass());
+//  opt.add(createGVNPass());
+//  opt.add(createCFGSimplificationPass());
+//  opt.doInitialization();
   theModule->dump();
 
   return EXIT_SUCCESS;
