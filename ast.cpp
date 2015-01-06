@@ -102,6 +102,8 @@ Value* VarInitExprAST::Codegen()
 
 Value* BinaryExprAST::Codegen()
 {
+  Value *L = LHS->Codegen();
+  Value *R = RHS->Codegen();
   if(Op == '=')
   {
     cout << "Codegen'ing binary op....\n";
@@ -131,8 +133,6 @@ Value* BinaryExprAST::Codegen()
     return Builder.CreateStore(Val,Variable);
   }
 
-  Value *L = LHS->Codegen();
-  Value *R = RHS->Codegen();
   if (L == 0 || R == 0) return 0;
   
   switch (Op) 

@@ -126,7 +126,8 @@ dataType: INT { $$ = "int"; }
         | CHAR { $$ = "char"; }
         | STR { $$ = "string"; }
 
-varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$1] = $2; }
+varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $2; }
+      | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
@@ -165,7 +166,3 @@ binOp: numVal
      | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
      | binOp DIV binOp { $$ = new BinaryExprAST('/',$1,$3); }
      | binOp MUL binOp { $$ = new BinaryExprAST('*',$1,$3); }
-     | expression LT expression
-     | expression GT expression
-     | expression LTE expression
-     | expression GTE expression
