@@ -110,8 +110,7 @@ expression: varDef  { lines.push_back($1); /*createVarDef($$);*/ }
           | extern 
           | funcCall  { lines.push_back($1); }
           | ifBranch  { lines.push_back($1); }
-          | binOp  { createBinOp($1); lines.push_back($1); }
-          | numVal { lines.push_back($1); }
+          | binOp  { /*createBinOp($1)*/; lines.push_back($1); }
           | ID  { /*lines.push_back($1);*/ }
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
@@ -127,7 +126,7 @@ dataType: INT { $$ = "int"; }
         | CHAR { $$ = "char"; }
         | STR { $$ = "string"; }
 
-varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$1] = $2; cout << "Variable Defined!\n"; }
+varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$1] = $2; }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
@@ -147,7 +146,7 @@ elseBranch: ELSE block
 ifBranch: IF expression block 
         | IF expression block elseBranch
 
-funcDef: funcProto block { $$ = $1; cout << "Function defined!\n"; }
+funcDef: funcProto block { $$ = $1; }
 
 kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 
@@ -160,11 +159,12 @@ funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeA
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
 
-binOp: ID EQUAL numVal { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
-     | numVal PLUS numVal { $$ = new BinaryExprAST('+',$1,$3); }
-     | numVal MINUS numVal { $$ = new BinaryExprAST('-',$1,$3); }
-     | numVal DIV numVal { $$ = new BinaryExprAST('/',$1,$3); }
-     | numVal MUL numVal { $$ = new BinaryExprAST('*',$1,$3); }
+binOp: numVal
+     | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
+     | binOp PLUS binOp { $$ = new BinaryExprAST('+',$1,$3); }
+     | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
+     | binOp DIV binOp { $$ = new BinaryExprAST('/',$1,$3); }
+     | binOp MUL binOp { $$ = new BinaryExprAST('*',$1,$3); }
      | expression LT expression
      | expression GT expression
      | expression LTE expression

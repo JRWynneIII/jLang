@@ -70,47 +70,65 @@ Value* VariableExprAST::Codegen()
 
 Value* VarInitExprAST::Codegen()
 {
-  AllocaInst* Alloca;
-  vector<AllocaInst* > oldBindings;
+  cout << "Codegen'ing new variable...\n";
+  if (NamedValues.find(Name) == NamedValues.end())
+  {
+    AllocaInst* Alloca;
+    vector<AllocaInst* > oldBindings;
 
-  Function* F = Builder.GetInsertBlock()->getParent();
+    Function* F = Builder.GetInsertBlock()->getParent();
 
-  Value* Initial;
-  if(Initd) //if initialized
-    Initial = Initd->Codegen();
+    Value* Initial;
+    if(Initd) //if initialized
+      Initial = Initd->Codegen();
+    else
+    {
+      if (Type == "double")
+        Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
+      else if (Type == "int")
+        Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+    }
+    Alloca = CreateEntryBlockAlloca(Name,Type);
+    //cout << Alloca << endl;
+    NamedValues[Name] = Alloca;
+    return Builder.CreateStore(Initial,Alloca);
+  }
   else
   {
-    if (Type == "double")
-      Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
-    else if (Type == "int")
-      Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+    cerr << "\033[31m ERROR: \033[37m Variable already exists: " << Name << endl;
+    exit(EXIT_FAILURE);
   }
-  Alloca = CreateEntryBlockAlloca(Name,Type);
-  return Builder.CreateStore(Initial,Alloca);
 }
 
 Value* BinaryExprAST::Codegen()
 {
   if(Op == '=')
   {
+    cout << "Codegen'ing binary op....\n";
     VariableExprAST* LHSE = dynamic_cast<VariableExprAST*>(LHS);
     if (!LHSE)
     {
       cerr << "\033[31m ERROR: \033[37m lvalue must be a variable: " << endl;
       exit(EXIT_FAILURE);
     }
+
+    //Codegen the right hand side.
     Value* Val = RHS->Codegen();
+
     if(Val == 0)
-      return 0;
+    {
+      cerr << "\033[31m ERROR: \033[37m Invalid Value " << endl;
+      exit(EXIT_FAILURE);
+    }
     //Look up the name
     Value* Variable = NamedValues[LHSE->getName()];
-    if (Variable == 0)
+    //cout << LHSE->getName() << " " << Variable << endl;
+    if (!Variable)
     {
       cerr << "\033[31m ERROR: \033[37m variable not declared!: " << LHSE->getName() << endl;
       exit(EXIT_FAILURE);
     }
-    Builder.CreateStore(Val,Variable);
-    return Val;
+    return Builder.CreateStore(Val,Variable);
   }
 
   Value *L = LHS->Codegen();
@@ -270,7 +288,6 @@ void PrototypeAST::CreateArgumentAllocas(Function *F)
 
 Function* FunctionAST::Codegen()
 {
-  NamedValues.clear();
   Function* theFunction = Proto->Codegen();
   if(theFunction == 0)
     return 0;
@@ -291,12 +308,21 @@ Function* FunctionAST::Codegen()
   {
     Builder.CreateRet(last);
     verifyFunction(*theFunction);
-  //  theFPM->run(*theFunction);
     return theFunction;
   }
   //If it gets here there's an error! erase the function
   theFunction->eraseFromParent();
   return 0;
+}
+
+void dumpVars()
+{
+  map<string,AllocaInst*>::iterator it;
+  cout << "\nDumping vars: \n";
+  for(it=NamedValues.begin();it!=NamedValues.end(); it++)
+  {
+    cout << it-> first << ": " << it->second << endl;
+  }
 }
 
 int main(int argc, char*argv[])
@@ -309,15 +335,17 @@ int main(int argc, char*argv[])
     yyin = fopen(argv[1],"r");
   yyparse();
 
-//  FunctionPassManager opt(theModule);
-//  opt.add(createBasicAliasAnalysisPass());
-//  opt.add(createPromoteMemoryToRegisterPass());
-//  opt.add(createInstructionCombiningPass());
-//  opt.add(createReassociatePass());
-//  opt.add(createGVNPass());
-//  opt.add(createCFGSimplificationPass());
-//  opt.doInitialization();
+  FunctionPassManager opt(theModule);
+  opt.add(createBasicAliasAnalysisPass());
+  opt.add(createPromoteMemoryToRegisterPass());
+  opt.add(createInstructionCombiningPass());
+  opt.add(createReassociatePass());
+  opt.add(createGVNPass());
+  opt.add(createCFGSimplificationPass());
+  opt.doInitialization();
   theModule->dump();
+
+  dumpVars();
 
   return EXIT_SUCCESS;
 }
