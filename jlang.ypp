@@ -44,6 +44,7 @@ void yyerror(char const *s)
   DoubleExprAST* dval;
   IntExprAST* ival;
   ExprAST* expr;
+  stringExprAST* strAST;
 };
 
 %token NUMBER FLOAT
@@ -94,6 +95,7 @@ void yyerror(char const *s)
 %type <_if> ifBranch
 %type <bo> binOp
 %type <expr> numVal
+%type <strAST> strVal
 
 %start program
 
@@ -103,15 +105,16 @@ program: expressions
 expressions: expressions expression
            | expression
 
-expression: varDef  { lines.push_back($1); /*createVarDef($$);*/ }
+expression: varDef  { lines.push_back($1); }
           | funcDef  { createfuncDef(new FunctionAST($1,lines)); lines.clear(); }
           | kernelDef 
           | modImport 
           | extern 
           | funcCall  { lines.push_back($1); }
           | ifBranch  { lines.push_back($1); }
-          | binOp  { /*createBinOp($1)*/; lines.push_back($1); }
-          | ID  { /*lines.push_back($1);*/ }
+          | binOp  {  lines.push_back($1); }
+          | strVal { lines.push_back($1); }
+          | ID  { }
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 
@@ -159,6 +162,8 @@ funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeA
 
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
+
+strVal: STRING { $$ = new stringExprAST($1, strlen($1)); }
 
 binOp: numVal
      | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }

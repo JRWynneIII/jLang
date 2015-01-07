@@ -1,6 +1,9 @@
 #include <iostream>
+#include <fstream>
 #include "llvm/Analysis/Passes.h"
+#include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Analysis/Verifier.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/IR/DataLayout.h"
@@ -11,6 +14,7 @@
 #include "llvm/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/ADT/StringRef.h"
 #include <cctype>
 #include <cstdio>
 #include <map>
@@ -55,6 +59,19 @@ Value* DoubleExprAST::Codegen()
   return ConstantFP::get(Type::getDoubleTy(getGlobalContext()), Val);
 }
 
+Value* stringExprAST::Codegen()
+{
+  int i = 0;
+  vector<uint8_t> v;
+  while (i<Size)
+  {
+    v.push_back(Val[i]);
+    i++;
+  } 
+  ArrayRef<uint8_t> chars(v);
+  return ConstantDataArray::get(getGlobalContext(), chars);
+}
+
 Value* VariableExprAST::Codegen()
 {
   //does var exist?
@@ -87,6 +104,8 @@ Value* VarInitExprAST::Codegen()
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
       else if (Type == "int")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+      else if (Type == "string")
+        Initial = ConstantDataArray::getString(getGlobalContext(), "");
     }
     Alloca = CreateEntryBlockAlloca(Name,Type);
     //cout << Alloca << endl;
@@ -226,8 +245,10 @@ Function* PrototypeAST::Codegen()
 {
   vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
   vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
+  vector<Type*> Strings(Args.size(), Type::getInt8PtrTy(getGlobalContext()));
   ArrayRef<Type*> argsRefD(Doubles);
   ArrayRef<Type*> argsRefI(Ints);
+  ArrayRef<Type*> argsRefS(Strings);
   FunctionType* FT;
   Function* F;
   if (Args.empty())
@@ -236,6 +257,8 @@ Function* PrototypeAST::Codegen()
       FT = FunctionType::get(Builder.getDoubleTy(),false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),false);
+    else if (Ty == "string")
+      FT = FunctionType::get(Builder.getInt8PtrTy(),false);
   }
   else 
   {
@@ -243,6 +266,8 @@ Function* PrototypeAST::Codegen()
       FT = FunctionType::get(Builder.getDoubleTy(),argsRefD,false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),argsRefI,false);
+    else if (Ty == "string")
+      FT = FunctionType::get(Builder.getInt8PtrTy(),argsRefS,false);
   }
   F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
   if(F->getName() != Name)
@@ -344,8 +369,10 @@ int main(int argc, char*argv[])
   opt.add(createCFGSimplificationPass());
   opt.doInitialization();
   theModule->dump();
-
   dumpVars();
 
+  string Errors, ErrorCatch;
+  raw_fd_ostream bcFile("t.ll", Errors, sys::fs::F_Binary);
+  WriteBitcodeToFile(theModule,bcFile);
   return EXIT_SUCCESS;
 }

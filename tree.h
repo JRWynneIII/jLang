@@ -68,6 +68,15 @@ public:
   virtual Value *Codegen();
 };
 
+class stringExprAST : public ExprAST
+{
+public:
+  const char* Val;
+  double Size;
+  stringExprAST(const char* val, double size) : Val(val), Size(size) {}
+  virtual Value* Codegen();
+};
+
 class VariableExprAST : public ExprAST 
 {
   string Name;
