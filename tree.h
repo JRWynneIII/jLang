@@ -77,6 +77,14 @@ public:
   virtual Value* Codegen();
 };
 
+class CharExprAST : public ExprAST
+{
+public:
+  char Val;
+  CharExprAST(char val) : Val(val) {}
+  virtual Value* Codegen();
+};
+
 class VariableExprAST : public ExprAST 
 {
   string Name;

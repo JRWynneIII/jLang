@@ -45,10 +45,11 @@ void yyerror(char const *s)
   IntExprAST* ival;
   ExprAST* expr;
   stringExprAST* strAST;
+  CharExprAST* charAST;
 };
 
 %token NUMBER FLOAT
-%token STRING ID END
+%token STRING ID END CHARACTER
 %token FUNC KERNEL EXTERN FOR IF ELSE ELIF MODULE
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
@@ -96,6 +97,7 @@ void yyerror(char const *s)
 %type <bo> binOp
 %type <expr> numVal
 %type <strAST> strVal
+%type <charAST> chara
 
 %start program
 
@@ -115,10 +117,18 @@ expression: varDef  { lines.push_back($1); }
           | binOp  {  lines.push_back($1); }
           | strVal { lines.push_back($1); }
           | ID  { }
+          | chara
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 
-funcCall: ID LPAREN paramDefs RPAREN { cout << "Calling func " << $1 << endl; }
+funcParams: ID
+          | numVal
+          | strVal
+          | binOp
+
+chara: CHARACTER { cout << "Character!\n"; }
+
+funcCall: ID LPAREN funcParams RPAREN { cout << "Calling func " << $1 << endl; }
         | ID LPAREN RPAREN { cout << "Calling func " << $1 << endl; }
 
 extern: EXTERN funcProto SEMICOLON
@@ -135,8 +145,7 @@ varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $2; }
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
-paramDef:
-        | dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); createVarDef(temp); cout << "Parameter defined!\n"; }
+paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); createVarDef(temp); cout << "Parameter defined!\n"; }
 
 block: LBRACE expressions RBRACE
      | LBRACE RBRACE

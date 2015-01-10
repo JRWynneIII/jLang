@@ -58,10 +58,9 @@ NUMBER [0-9]+
 "," { return COMMA; }
 ":" { return COLON; }
 ";" { return SEMICOLON; }
+\'[a-zA-Z]\' { yylval.charVal = *yytext; return CHARACTER; }
 [a-z_][a-zA-Z0-9_]* { yylval.strVal = strdup(yytext); return ID; }
-[A-Z][a-zA-Z0-9_]* { VTYPE("CONSTANT", yytext); }
 \"([^"]|\\.)*\" { yylval.strVal = strdup(yytext); return STRING; }
-\'([^']|\\.)*\' {  yylval.strVal = strdup(yytext); return STRING; }
 
 \n {lineNum++; /*return END;*/ }
 . { fprintf(stderr, "Unknown token '%s'\n", yytext); }

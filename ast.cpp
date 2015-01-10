@@ -59,6 +59,11 @@ Value* DoubleExprAST::Codegen()
   return ConstantFP::get(Type::getDoubleTy(getGlobalContext()), Val);
 }
 
+Value* CharExprAST::Codegen()
+{
+  return ConstantInt::get(Type::getInt8Ty(getGlobalContext()), Val);
+}
+
 Value* stringExprAST::Codegen()
 {
   int i = 0;
@@ -104,6 +109,8 @@ Value* VarInitExprAST::Codegen()
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
       else if (Type == "int")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+      else if (Type == "char")
+        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
       else if (Type == "string")
         Initial = ConstantDataArray::getString(getGlobalContext(), "");
     }
@@ -246,9 +253,11 @@ Function* PrototypeAST::Codegen()
   vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
   vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
   vector<Type*> Strings(Args.size(), Type::getInt8PtrTy(getGlobalContext()));
+  vector<Type*> Chars(Args.size(), Type::getInt8Ty(getGlobalContext()));
   ArrayRef<Type*> argsRefD(Doubles);
   ArrayRef<Type*> argsRefI(Ints);
   ArrayRef<Type*> argsRefS(Strings);
+  ArrayRef<Type*> argsRefC(Chars);
   FunctionType* FT;
   Function* F;
   if (Args.empty())
@@ -257,6 +266,8 @@ Function* PrototypeAST::Codegen()
       FT = FunctionType::get(Builder.getDoubleTy(),false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),false);
+    else if (Ty == "char")
+      FT = FunctionType::get(Builder.getInt8Ty(),false);
     else if (Ty == "string")
       FT = FunctionType::get(Builder.getInt8PtrTy(),false);
   }
@@ -266,6 +277,8 @@ Function* PrototypeAST::Codegen()
       FT = FunctionType::get(Builder.getDoubleTy(),argsRefD,false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),argsRefI,false);
+    else if (Ty == "char")
+      FT = FunctionType::get(Builder.getInt8Ty(),argsRefC,false);
     else if (Ty == "string")
       FT = FunctionType::get(Builder.getInt8PtrTy(),argsRefS,false);
   }
