@@ -28,12 +28,11 @@ using namespace std;
 using namespace llvm;
 
 extern FILE* yyin;
-
-ExprAST* RootNode;
+extern map<string,string> typeTab;
 
 static Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
-static map<string, AllocaInst*> NamedValues;
+map<string, AllocaInst*> NamedValues;
 static FunctionPassManager *theFPM;
 
 static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
@@ -196,8 +195,16 @@ Value* UnaryExprAST::Codegen()
   
   switch(Op)
   {
-
+    case '^':
+      if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "int")
+        return Builder.CreateIntToPtr(R,Type::getInt32Ty(getGlobalContext()));
+      break;
+    default: break;
   }
+  Function *F = theModule->getFunction(string("unary")+Op);
+  Value *Ops[] = { R };
+  assert(F && "unary operator not found!");
+  return Builder.CreateCall(F,Ops,"unop");
 
 }
 

@@ -13,6 +13,7 @@ extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
 extern int lineNum;
+extern map<std::string, llvm::AllocaInst*> NamedValues;
 using namespace std;
 void yyerror(char const *s) 
 { 
@@ -46,6 +47,7 @@ void yyerror(char const *s)
   ExprAST* expr;
   stringExprAST* strAST;
   CharExprAST* charAST;
+  UnaryExprAST* uo;
 };
 
 %token NUMBER FLOAT
@@ -98,6 +100,7 @@ void yyerror(char const *s)
 %type <bo> binOp
 %type <expr> numVal
 %type <charAST> chara
+%type <uo> unaryOp
 
 %start program
 
@@ -108,7 +111,7 @@ expressions: expressions expression
            | expression
 
 expression: varDef  { lines.push_back($1); }
-          | funcDef  { createfuncDef(new FunctionAST($1,lines)); lines.clear(); }
+          | funcDef  { createfuncDef(new FunctionAST($1,lines)); lines.clear(); NamedValues.clear(); }
           | kernelDef 
           | modImport 
           | extern 
@@ -116,6 +119,7 @@ expression: varDef  { lines.push_back($1); }
           | ifBranch  { lines.push_back($1); }
           | binOp  { lines.push_back($1); }
           | chara { lines.push_back($1); }
+          | unaryOp {lines.push_back($1); }
           | ID  { lines.push_back(new VariableExprAST($1,typeTab[$1])); }
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
@@ -168,9 +172,12 @@ kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER
 funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear(); }
          | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); }
 
+unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
+
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
       | chara
+      | ID
 
 binOp: numVal
      | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
