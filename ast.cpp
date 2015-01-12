@@ -185,6 +185,22 @@ Value* BinaryExprAST::Codegen()
   return Builder.CreateCall(F, Ops, "binop"); 
 }
 
+Value* UnaryExprAST::Codegen()
+{
+  Value* R = RHS->Codegen();
+  if (!R)
+  {
+      cerr << "\033[31m ERROR: \033[37m Invalid rval!: " <<  endl;
+      exit(EXIT_FAILURE);
+  }
+  
+  switch(Op)
+  {
+
+  }
+
+}
+
 Value* CallExprAST::Codegen()
 {
   //Look up the name in the global module

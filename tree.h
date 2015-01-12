@@ -117,6 +117,15 @@ public:
   virtual Value *Codegen();
 };
 
+class UnaryExprAST : public ExprAST
+{
+  char Op;
+  ExprAST *RHS;
+public:
+  UnaryExprAST(char op, ExprAST *rhs) : Op(op), RHS(rhs) {}
+  virtual Value* Codegen();
+};
+
 class CallExprAST : public ExprAST 
 {
   string Callee;

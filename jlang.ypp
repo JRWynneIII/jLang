@@ -50,7 +50,7 @@ void yyerror(char const *s)
 
 %token NUMBER FLOAT
 %token STRING ID END CHARACTER
-%token FUNC KERNEL EXTERN FOR IF ELSE ELIF MODULE
+%token FUNC KERNEL EXTERN FOR IF ELSE ELIF MODULE RETURN
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
 %token EQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
@@ -116,7 +116,7 @@ expression: varDef  { lines.push_back($1); }
           | ifBranch  { lines.push_back($1); }
           | binOp  { lines.push_back($1); }
           | chara { lines.push_back($1); }
-          | ID  { }
+          | ID  { lines.push_back(new VariableExprAST($1,typeTab[$1])); }
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 

@@ -17,6 +17,7 @@ NUMBER [0-9]+
 {NUMBER}(\.{NUMBER}|(\.{NUMBER})?[eE][+-]?{NUMBER}) { yylval.doubleVal = atof(yytext); return FLOAT; }
 {NUMBER} { yylval.intVal = atof(yytext); return NUMBER; }
 [\t ] {}
+"return" { return RETURN; }
 "module" { return MODULE; }
 "func" { return FUNC; }
 "extern" { return EXTERN; }
