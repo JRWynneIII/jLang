@@ -87,6 +87,7 @@ void yyerror(char const *s)
 %type <strVal> RPAREN
 %type <strVal> RBRACE
 %type <strVal> ID
+%type <charVal> CHARACTER
 
 %type <strVal> dataType 
 %type <varInit> varDef
@@ -96,7 +97,6 @@ void yyerror(char const *s)
 %type <_if> ifBranch
 %type <bo> binOp
 %type <expr> numVal
-%type <strAST> strVal
 %type <charAST> chara
 
 %start program
@@ -114,19 +114,18 @@ expression: varDef  { lines.push_back($1); }
           | extern 
           | funcCall  { lines.push_back($1); }
           | ifBranch  { lines.push_back($1); }
-          | binOp  {  lines.push_back($1); }
-          | strVal { lines.push_back($1); }
+          | binOp  { lines.push_back($1); }
+          | chara { lines.push_back($1); }
           | ID  { }
-          | chara
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 
 funcParams: ID
           | numVal
-          | strVal
+          | chara
           | binOp
 
-chara: CHARACTER { cout << "Character!\n"; }
+chara: CHARACTER { $$ = new CharExprAST($1); }
 
 funcCall: ID LPAREN funcParams RPAREN { cout << "Calling func " << $1 << endl; }
         | ID LPAREN RPAREN { cout << "Calling func " << $1 << endl; }
@@ -171,8 +170,7 @@ funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeA
 
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
-
-strVal: STRING { $$ = new stringExprAST($1, strlen($1)); }
+      | chara
 
 binOp: numVal
      | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
