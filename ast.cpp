@@ -196,16 +196,12 @@ Value* UnaryExprAST::Codegen()
   switch(Op)
   {
     case '^':
-      if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "int")
+      if (typeTab[RHS->getName()] == "int")
+      {
         return Builder.CreateIntToPtr(R,Type::getInt32Ty(getGlobalContext()));
-      break;
+      }
     default: break;
   }
-  Function *F = theModule->getFunction(string("unary")+Op);
-  Value *Ops[] = { R };
-  assert(F && "unary operator not found!");
-  return Builder.CreateCall(F,Ops,"unop");
-
 }
 
 Value* CallExprAST::Codegen()
@@ -405,7 +401,6 @@ int main(int argc, char*argv[])
   opt.add(createCFGSimplificationPass());
   opt.doInitialization();
   theModule->dump();
-  dumpVars();
 
   string Errors, ErrorCatch;
   raw_fd_ostream bcFile("t.ll", Errors, sys::fs::F_Binary);

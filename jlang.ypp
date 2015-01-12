@@ -142,7 +142,7 @@ dataType: INT { $$ = "int"; }
         | CHAR { $$ = "char"; }
         | STR { $$ = "string"; }
 
-varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $2; }
+varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
 
 paramDefs: paramDefs COMMA paramDef

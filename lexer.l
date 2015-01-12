@@ -30,7 +30,7 @@ NUMBER [0-9]+
 "if" { return IF; }
 "else" { return ELSE; }
 "elif" { return ELIF; }
-'^' { return CAROT; }
+"^" { return CAROT; }
 "->" { return RARROW; }
 "<-" { return LARROW; }
 "=" { return EQUAL; }

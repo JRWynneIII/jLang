@@ -120,9 +120,9 @@ public:
 class UnaryExprAST : public ExprAST
 {
   char Op;
-  ExprAST *RHS;
+  VariableExprAST *RHS;
 public:
-  UnaryExprAST(char op, ExprAST *rhs) : Op(op), RHS(rhs) {}
+  UnaryExprAST(char op, VariableExprAST *rhs) : Op(op), RHS(rhs) {}
   virtual Value* Codegen();
 };
 
