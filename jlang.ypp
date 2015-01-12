@@ -18,7 +18,6 @@ using namespace std;
 void yyerror(char const *s) 
 { 
   cerr << "\033[31m ERROR: \033[37m" << s << " in line: " << lineNum << endl;
-//  fprintf(stderr,"ERROR: %s in line %d\n", s, lineNum); 
 }
 %}
 
@@ -101,6 +100,7 @@ void yyerror(char const *s)
 %type <expr> numVal
 %type <charAST> chara
 %type <uo> unaryOp
+%type <strVal> pointerType
 
 %start program
 
@@ -141,6 +141,11 @@ dataType: INT { $$ = "int"; }
         | DOUBLE { $$ = "double"; }
         | CHAR { $$ = "char"; }
         | STR { $$ = "string"; }
+        | pointerType  { $$ = $1; }
+
+pointerType: INT CAROT { $$ = "ints"; }
+           | DOUBLE CAROT { $$ = "doubles"; }
+           | CHAR CAROT { $$ = "chars"; }
 
 varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }

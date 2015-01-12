@@ -39,10 +39,16 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
 {
   if (type == "double")
     return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
+  else if (type == "doubles")
+    return Builder.CreateAlloca(Type::getDoublePtrTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "int")
     return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
+  else if (type == "ints")
+    return Builder.CreateAlloca(Type::getInt32PtrTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "char")
     return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
+  else if (type == "chars")
+    return Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "string")
     return Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,VarName.c_str());
   return 0;
@@ -106,10 +112,16 @@ Value* VarInitExprAST::Codegen()
     {
       if (Type == "double")
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
+      else if (Type == "doubles")
+        Initial = ConstantFP::get(Type::getDoublePtrTy(getGlobalContext()),0.0);
       else if (Type == "int")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+      else if (Type == "ints")
+        Initial = ConstantInt::get(Type::getInt32PtrTy(getGlobalContext()),0);
       else if (Type == "char")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
+      else if (Type == "chars")
+        Initial = ConstantInt::get(Type::getInt8PtrTy(getGlobalContext()),0);
       else if (Type == "string")
         Initial = ConstantDataArray::getString(getGlobalContext(), "");
     }
