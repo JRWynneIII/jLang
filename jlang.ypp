@@ -179,7 +179,6 @@ funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeA
          | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); }
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
-       | ID EQUAL unaryOp { $$ = new UnaryExprAST('^', new VariableExprAST($1,typeTab[$1])); }
 
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
@@ -188,6 +187,7 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
 
 binOp: numVal
      | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
+     | ID EQUAL unaryOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]), $3); }
      | binOp PLUS binOp { $$ = new BinaryExprAST('+',$1,$3); }
      | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
      | binOp DIV binOp { $$ = new BinaryExprAST('/',$1,$3); }

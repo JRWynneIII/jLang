@@ -113,15 +113,17 @@ Value* VarInitExprAST::Codegen()
       if (Type == "double")
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
       else if (Type == "doubles")
-        Initial = ConstantFP::get(Type::getDoublePtrTy(getGlobalContext()),0.0);
+        Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getDoubleTy(getGlobalContext())));
+        //Initial = ConstantFP::get(Type::getDoublePtrTy(getGlobalContext()),0.0);
       else if (Type == "int")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
       else if (Type == "ints")
-        Initial = ConstantInt::get(Type::getInt32PtrTy(getGlobalContext()),0);
+        Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt32Ty(getGlobalContext())));
       else if (Type == "char")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
       else if (Type == "chars")
-        Initial = ConstantInt::get(Type::getInt8PtrTy(getGlobalContext()),0);
+        Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt8Ty(getGlobalContext())));
+        //Initial = ConstantInt::get(Type::getInt8PtrTy(getGlobalContext()),0);
       else if (Type == "string")
         Initial = ConstantDataArray::getString(getGlobalContext(), "");
     }
@@ -287,36 +289,48 @@ Value* IfExprAST::Codegen()
 Function* PrototypeAST::Codegen()
 {
   vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
+  vector<Type*> PDoubles(Args.size(), Type::getDoublePtrTy(getGlobalContext()));
   vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
-  vector<Type*> Strings(Args.size(), Type::getInt8PtrTy(getGlobalContext()));
+  vector<Type*> PInts(Args.size(), Type::getInt32PtrTy(getGlobalContext()));
   vector<Type*> Chars(Args.size(), Type::getInt8Ty(getGlobalContext()));
+  vector<Type*> PChars(Args.size(), Type::getInt8PtrTy(getGlobalContext()));
   ArrayRef<Type*> argsRefD(Doubles);
+  ArrayRef<Type*> argsRefPD(PDoubles);
   ArrayRef<Type*> argsRefI(Ints);
-  ArrayRef<Type*> argsRefS(Strings);
+  ArrayRef<Type*> argsRefPI(PInts);
   ArrayRef<Type*> argsRefC(Chars);
+  ArrayRef<Type*> argsRefPC(PChars);
   FunctionType* FT;
   Function* F;
   if (Args.empty())
   {
     if (Ty == "double")
       FT = FunctionType::get(Builder.getDoubleTy(),false);
+    else if (Ty == "doubles")
+      FT = FunctionType::get(Type::getDoublePtrTy(getGlobalContext()),false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),false);
+    else if (Ty == "ints")
+      FT = FunctionType::get(Type::getInt32PtrTy(getGlobalContext()),false);
     else if (Ty == "char")
       FT = FunctionType::get(Builder.getInt8Ty(),false);
-    else if (Ty == "string")
+    else if (Ty == "chars")
       FT = FunctionType::get(Builder.getInt8PtrTy(),false);
   }
   else 
   {
     if (Ty == "double")
       FT = FunctionType::get(Builder.getDoubleTy(),argsRefD,false);
+    else if (Ty == "doubles")
+      FT = FunctionType::get(Type::getDoublePtrTy(getGlobalContext()),argsRefPD,false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),argsRefI,false);
+    else if (Ty == "ints")
+      FT = FunctionType::get(Type::getInt32PtrTy(getGlobalContext()),argsRefPI,false);
     else if (Ty == "char")
       FT = FunctionType::get(Builder.getInt8Ty(),argsRefC,false);
-    else if (Ty == "string")
-      FT = FunctionType::get(Builder.getInt8PtrTy(),argsRefS,false);
+    else if (Ty == "chars")
+      FT = FunctionType::get(Builder.getInt8PtrTy(),argsRefPC,false);
   }
   F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
   if(F->getName() != Name)
