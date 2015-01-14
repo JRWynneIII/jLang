@@ -214,6 +214,11 @@ Value* UnaryExprAST::Codegen()
       }
     default: break;
   }
+
+  Function *F = theModule->getFunction(string("unary")+Op);
+  assert(F && "unary operator not found!");
+  Value* ident = R;
+  return Builder.CreateCall(F,R,"unop");
 }
 
 Value* CallExprAST::Codegen()
