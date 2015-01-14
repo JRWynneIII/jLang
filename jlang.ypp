@@ -149,6 +149,7 @@ pointerType: INT CAROT { $$ = "ints"; }
 
 varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
+      | dataType ID EQUAL unaryOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
@@ -178,6 +179,7 @@ funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeA
          | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); }
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
+       | ID EQUAL unaryOp { $$ = new UnaryExprAST('^', new VariableExprAST($1,typeTab[$1])); }
 
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
