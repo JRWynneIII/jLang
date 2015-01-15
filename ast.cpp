@@ -40,15 +40,15 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
   if (type == "double")
     return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "doubles")
-    return Builder.CreateAlloca(Type::getDoublePtrTy(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "int")
     return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "ints")
-    return Builder.CreateAlloca(Type::getInt32PtrTy(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "char")
     return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "chars")
-    return Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "string")
     return Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,VarName.c_str());
   return 0;
@@ -113,16 +113,19 @@ Value* VarInitExprAST::Codegen()
       if (Type == "double")
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
       else if (Type == "doubles")
-        Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getDoubleTy(getGlobalContext())));
+        Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
+        //Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getDoubleTy(getGlobalContext())));
         //Initial = ConstantFP::get(Type::getDoublePtrTy(getGlobalContext()),0.0);
       else if (Type == "int")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
       else if (Type == "ints")
-        Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt32Ty(getGlobalContext())));
+        Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+        //Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt32Ty(getGlobalContext())));
       else if (Type == "char")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
       else if (Type == "chars")
-        Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt8Ty(getGlobalContext())));
+        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
+        //Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt8Ty(getGlobalContext())));
         //Initial = ConstantInt::get(Type::getInt8PtrTy(getGlobalContext()),0);
       else if (Type == "string")
         Initial = ConstantDataArray::getString(getGlobalContext(), "");
@@ -212,7 +215,7 @@ Value* UnaryExprAST::Codegen()
     case '^':
       if (typeTab[RHS->getName()] == "int")
       {
-        return Builder.CreateIntToPtr(R,Type::getInt32Ty(getGlobalContext()));
+        return Builder.CreateIntToPtr(R,Type::getInt32PtrTy(getGlobalContext()));
       }
     default: break;
   }
