@@ -85,14 +85,14 @@ Value* stringExprAST::Codegen()
 Value* VariableExprAST::Codegen()
 {
   //does var exist?
+  cout << "HEREREREREREREEEEEE\n";
   Value* V = NamedValues[Name];
   if (V == 0)
   {
     cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
     exit(EXIT_FAILURE);
   }
-  
-  return Builder.CreateLoad(V, Name.c_str());
+  return Builder.CreateLoad(V, Name);
 }
 
 Value* VarInitExprAST::Codegen()
@@ -138,8 +138,6 @@ Value* VarInitExprAST::Codegen()
 
 Value* BinaryExprAST::Codegen()
 {
-  Value *L = LHS->Codegen();
-  Value *R = RHS->Codegen();
   if(Op == '=')
   {
     cout << "Codegen'ing binary op....\n";
@@ -168,10 +166,13 @@ Value* BinaryExprAST::Codegen()
     return Builder.CreateStore(Val,Variable);
   }
 
+  Value *L = LHS->Codegen();
+  Value *R = RHS->Codegen();
   if (L == 0 || R == 0) return 0;
 
   //Use the getValueID method on the R and L values to check for types/type clashes
   bool isInt = false;
+  cout << L->getValueID() << "\t" << R->getValueID() << endl;
   if (L->getValueID() == 11 && R->getValueID() == 11)
   {
     isInt = true;
@@ -180,8 +181,18 @@ Value* BinaryExprAST::Codegen()
   {
     isInt = false;
   } 
+  else if (L->getValueID() == 49 && R->getValueID() == 49)
+  {
+    if (dynamic_cast<VariableExprAST*>(LHS)->getType() == "int" && dynamic_cast<VariableExprAST*>(RHS)->getType() == "int")
+      isInt = true;
+    else if (dynamic_cast<VariableExprAST*>(LHS)->getType() == "double" && dynamic_cast<VariableExprAST*>(RHS)->getType() == "double")
+      isInt = false;
+    else
+      goto err;
+  } 
   else
   {
+err:
     cerr << "\033[31m ERROR: \033[37m Types do not match!" << endl;
     exit(EXIT_FAILURE);
   }

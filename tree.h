@@ -92,6 +92,7 @@ class VariableExprAST : public ExprAST
 public:
   VariableExprAST(const string &name, const string &type) : Name(name), Type(type) {}
   const string &getName() const { return Name; }
+  const string &getType() const { return Type; }
   virtual Value *Codegen();
 };
 

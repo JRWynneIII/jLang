@@ -183,9 +183,12 @@ unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1]
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
       | chara
-      | ID
 
 binOp: numVal
+     | ID PLUS ID { $$ = new BinaryExprAST('+', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
+     | ID MINUS ID { $$ = new BinaryExprAST('-', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
+     | ID DIV ID { $$ = new BinaryExprAST('/', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
+     | ID MUL ID { $$ = new BinaryExprAST('*', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
      | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
      | ID EQUAL unaryOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]), $3); }
      | binOp PLUS binOp { $$ = new BinaryExprAST('+',$1,$3); }
