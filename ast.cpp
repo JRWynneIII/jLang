@@ -34,6 +34,7 @@ static Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
 map<string, AllocaInst*> NamedValues;
 static FunctionPassManager *theFPM;
+PointerType* intPtr32 = PointerType::get(IntegerType::get(getGlobalContext(), 32), 0);
 
 static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
 {
@@ -44,7 +45,7 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
   else if (type == "int")
     return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "ints")
-    return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(intPtr32, 0, VarName.c_str());
   else if (type == "char")
     return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "chars")
@@ -85,7 +86,6 @@ Value* stringExprAST::Codegen()
 Value* VariableExprAST::Codegen()
 {
   //does var exist?
-  cout << "HEREREREREREREEEEEE\n";
   Value* V = NamedValues[Name];
   if (V == 0)
   {
