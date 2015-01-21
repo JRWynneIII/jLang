@@ -1,0 +1,11 @@
+*.sw*
+*tab.*
+*.ll
+*.bc
+*.yy.c
+*.sh
+*.out
+jlangc
+*.s
+test*
+y
