@@ -114,24 +114,18 @@ Value* VarInitExprAST::Codegen()
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
       else if (Type == "doubles")
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
-        //Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getDoubleTy(getGlobalContext())));
-        //Initial = ConstantFP::get(Type::getDoublePtrTy(getGlobalContext()),0.0);
       else if (Type == "int")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
       else if (Type == "ints")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
-        //Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt32Ty(getGlobalContext())));
       else if (Type == "char")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
       else if (Type == "chars")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
-        //Initial = ConstantPointerNull::get(PointerType::getUnqual(Type::getInt8Ty(getGlobalContext())));
-        //Initial = ConstantInt::get(Type::getInt8PtrTy(getGlobalContext()),0);
       else if (Type == "string")
         Initial = ConstantDataArray::getString(getGlobalContext(), "");
     }
     Alloca = CreateEntryBlockAlloca(Name,Type);
-    //cout << Alloca << endl;
     NamedValues[Name] = Alloca;
     return Builder.CreateStore(Initial,Alloca);
   }
@@ -166,7 +160,6 @@ Value* BinaryExprAST::Codegen()
     }
     //Look up the name
     Value* Variable = NamedValues[LHSE->getName()];
-    //cout << LHSE->getName() << " " << Variable << endl;
     if (!Variable)
     {
       cerr << "\033[31m ERROR: \033[37m variable not declared!: " << LHSE->getName() << endl;
@@ -176,17 +169,45 @@ Value* BinaryExprAST::Codegen()
   }
 
   if (L == 0 || R == 0) return 0;
+
+  //Use the getValueID method on the R and L values to check for types/type clashes
+  bool isInt = false;
+  if (L->getValueID() == 11 && R->getValueID() == 11)
+  {
+    isInt = true;
+  } 
+  else if (L->getValueID() == 12 && R->getValueID() == 12)
+  {
+    isInt = false;
+  } 
+  else
+  {
+    cerr << "\033[31m ERROR: \033[37m Types do not match!" << endl;
+    exit(EXIT_FAILURE);
+  }
   
   switch (Op) 
   {
     case '+': 
-      return Builder.CreateFAdd(L, R, "addtmp");
+      if(!isInt)
+        return Builder.CreateFAdd(L, R, "addtmp");
+      else
+        return Builder.CreateAdd(L, R, "addtmp");
     case '-': 
-      return Builder.CreateFSub(L, R, "subtmp");
+      if(!isInt)
+        return Builder.CreateFSub(L, R, "subtmp");
+      else
+        return Builder.CreateSub(L, R, "addtmp");
     case '*': 
-      return Builder.CreateFMul(L, R, "multmp");    
+      if(!isInt)
+        return Builder.CreateFMul(L, R, "multmp");    
+      else
+        return Builder.CreateMul(L, R, "addtmp");
     case '/':
-      return Builder.CreateFDiv(L, R, "divtmp");
+      if(!isInt)
+        return Builder.CreateFDiv(L, R, "divtmp");
+      else
+        return Builder.CreateUDiv(L, R, "addtmp");
     case '<':
       L = Builder.CreateFCmpULT(L, R, "cmptmp");
       return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
