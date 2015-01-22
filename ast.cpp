@@ -247,7 +247,8 @@ Value* UnaryExprAST::Codegen()
     case '^':
       if (typeTab[RHS->getName()] == "int")
       {
-        return Builder.CreateIntToPtr(R,Type::getInt32PtrTy(getGlobalContext()));
+        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0)); //Builder.CreateIntToPtr(R,Type::getInt32PtrTy(getGlobalContext()));
       }
     default: break;
   }
