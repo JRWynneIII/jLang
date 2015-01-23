@@ -46,17 +46,6 @@ void createExtern(PrototypeAST* P)
   func->dump();
 }
 
-void createTLE(FunctionAST* F)
-{
-  Function* func = F->Codegen();
-  if(!func)
-  {
-    cerr << "\033[31m ERROR: \033[37m Error in TLE " << endl;
-    exit(EXIT_FAILURE);
-  }
-  func->dump(); 
-}
-
 void createVarDef(VarInitExprAST* V)
 {
   Value* F = V->Codegen();

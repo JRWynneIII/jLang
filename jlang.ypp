@@ -101,6 +101,7 @@ void yyerror(char const *s)
 %type <expr> numVal
 %type <charAST> chara
 %type <uo> unaryOp
+%type <proto> extern
 %type <strVal> pointerType
 
 %start program
@@ -115,7 +116,7 @@ expression: varDef  { lines.push_back($1); }
           | funcDef  { createfuncDef(new FunctionAST($1,lines)); lines.clear(); NamedValues.clear(); }
           | kernelDef 
           | modImport 
-          | extern 
+          | extern { createExtern($1); }
           | funcCall  { lines.push_back($1); }
           | ifBranch  { lines.push_back($1); }
           | binOp  { lines.push_back($1); }
@@ -135,8 +136,7 @@ chara: CHARACTER { $$ = new CharExprAST($1); }
 funcCall: ID LPAREN funcParams RPAREN { cout << "Calling func " << $1 << endl; }
         | ID LPAREN RPAREN { cout << "Calling func " << $1 << endl; }
 
-extern: EXTERN funcProto SEMICOLON
-      | EXTERN kernelProto SEMICOLON
+extern: EXTERN funcProto SEMICOLON { $$ = $2; }
 
 dataType: INT { $$ = "int"; }
         | DOUBLE { $$ = "double"; }
