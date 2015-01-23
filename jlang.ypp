@@ -48,6 +48,7 @@ void yyerror(char const *s)
   stringExprAST* strAST;
   CharExprAST* charAST;
   UnaryExprAST* uo;
+  ForExprAST* fLoop;
 };
 
 %token NUMBER FLOAT
@@ -105,6 +106,7 @@ void yyerror(char const *s)
 %type <uo> unaryOp
 %type <proto> extern
 %type <strVal> pointerType
+%type <fLoop> forLoop
 
 %start program
 
@@ -118,6 +120,7 @@ expression: varDef  { lines.push_back($1); }
           | funcDef  { createfuncDef(new FunctionAST($1,lines)); lines.clear(); NamedValues.clear(); }
           | kernelDef 
           | modImport 
+          | forLoop { lines.push_back($1); }
           | extern { createExtern($1); }
           | funcCall  { lines.push_back($1); }
           | ifBranch  { lines.push_back($1); }
@@ -162,9 +165,9 @@ paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); a
 block: LBRACE expressions RBRACE
      | LBRACE RBRACE
 
-/*forLoop: FOR ID EQUAL expression COMMA expression block
-       | FOR ID EQUAL expression COMMA expression COMMA expression block 
-*/
+forLoop: FOR ID EQUAL numVal COMMA numVal block               { $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),$7); }
+       | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  { $$ = new ForExprAST($2,$4,$6,$8,$9); }
+
 elseBranch: ELSE block
           | ELIF block elseBranch
 
@@ -186,6 +189,7 @@ unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1]
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
       | chara { $$ = $1; }
+      | ID { $$ = new VariableExprAST($1,typeTab[$1]); }
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }
