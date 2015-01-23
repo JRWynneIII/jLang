@@ -185,6 +185,7 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
       | chara
 
 binOp: numVal
+     | LPAREN binOp RPAREN { $$ = $2; }
      | ID PLUS ID { $$ = new BinaryExprAST('+', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
      | ID MINUS ID { $$ = new BinaryExprAST('-', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
      | ID DIV ID { $$ = new BinaryExprAST('/', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
@@ -195,3 +196,4 @@ binOp: numVal
      | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
      | binOp DIV binOp { $$ = new BinaryExprAST('/',$1,$3); }
      | binOp MUL binOp { $$ = new BinaryExprAST('*',$1,$3); }
+     | LPAREN binOp RPAREN { $$ = $2; }
