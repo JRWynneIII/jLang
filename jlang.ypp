@@ -60,6 +60,7 @@ void yyerror(char const *s)
 %left LT GT LTE GTE;
 %left PLUS MINUS;
 %left MUL DIV;
+%nonassoc LPAREN
 
 %type <intVal> NUMBER
 %type <doubleVal> FLOAT
@@ -196,4 +197,3 @@ binOp: numVal
      | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
      | binOp DIV binOp { $$ = new BinaryExprAST('/',$1,$3); }
      | binOp MUL binOp { $$ = new BinaryExprAST('*',$1,$3); }
-     | LPAREN binOp RPAREN { $$ = $2; }
