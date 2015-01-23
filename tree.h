@@ -104,6 +104,7 @@ class VarInitExprAST : public ExprAST
 public:
   VarInitExprAST(const string &name, const string &type, ExprAST* initd) : Name(name), Type(type), Initd(initd) {}
   const string &getName() const { return Name; }
+  const string &getType() const { return Type; }
   virtual Value* Codegen();
 };
 

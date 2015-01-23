@@ -9,6 +9,7 @@ std::map<std::string,std::string> typeTab;
 std::map<std::string,std::string> varStringTbl;
 std::vector<VarInitExprAST*> args;
 std::vector<ExprAST*> lines;
+std::vector<ExprAST*> callArgs;
 extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
@@ -38,7 +39,7 @@ void yyerror(char const *s)
   VarInitExprAST* varInit;
   FunctionAST* fdef;
   PrototypeAST* proto;
-  CallExprAST* funcCall;
+  CallExprAST* functionCall;
   IfExprAST* _if;
   BinaryExprAST* bo;
   DoubleExprAST* dval;
@@ -95,10 +96,11 @@ void yyerror(char const *s)
 %type <varInit> varDef
 %type <proto> funcDef
 %type <proto> funcProto
-%type <funcCall> funcCall
+%type <functionCall> funcCall
 %type <_if> ifBranch
 %type <bo> binOp
 %type <expr> numVal
+%type <expr> funcParams
 %type <charAST> chara
 %type <uo> unaryOp
 %type <proto> extern
@@ -126,15 +128,15 @@ expression: varDef  { lines.push_back($1); }
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 
-funcParams: ID
-          | numVal
-          | chara
-          | binOp
+funcParams: ID { callArgs.push_back(new VariableExprAST($1,typeTab[$1])); }
+          | numVal { callArgs.push_back($1); }
+          | chara 
+          | binOp { callArgs.push_back($1); }
 
 chara: CHARACTER { $$ = new CharExprAST($1); }
 
-funcCall: ID LPAREN funcParams RPAREN { cout << "Calling func " << $1 << endl; }
-        | ID LPAREN RPAREN { cout << "Calling func " << $1 << endl; }
+funcCall: ID LPAREN funcParams RPAREN { $$ = new CallExprAST($1,callArgs); callArgs.clear(); }
+        | ID LPAREN RPAREN { $$ = new CallExprAST($1,callArgs); }
 
 extern: EXTERN funcProto SEMICOLON { $$ = $2; }
 
@@ -155,7 +157,7 @@ varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
-paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); createVarDef(temp); cout << "Parameter defined!\n"; }
+paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); cout << "Parameter defined!\n"; }
 
 block: LBRACE expressions RBRACE
      | LBRACE RBRACE

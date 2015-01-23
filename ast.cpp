@@ -404,7 +404,7 @@ void PrototypeAST::CreateArgumentAllocas(Function *F)
   Function::arg_iterator AI = F->arg_begin();
   for (unsigned Idx = 0, e = Args.size(); Idx != e; ++Idx, ++AI)
   {
-    AllocaInst* Alloca = CreateEntryBlockAlloca( Args[Idx]->getName(), "double");
+    AllocaInst* Alloca = CreateEntryBlockAlloca(Args[Idx]->getName(), Args[Idx]->getType());
     Builder.CreateStore(AI,Alloca);
     NamedValues[Args[Idx]->getName()] = Alloca;
   }
@@ -418,6 +418,8 @@ Function* FunctionAST::Codegen()
 
   BasicBlock* BB = BasicBlock::Create(getGlobalContext(),"entry",theFunction);
   Builder.SetInsertPoint(BB);
+
+  Proto->CreateArgumentAllocas(theFunction);
 
   vector<ExprAST*>::iterator it = Body.begin();
   Value* last;
