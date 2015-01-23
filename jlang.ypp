@@ -185,7 +185,7 @@ unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1]
 
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
-      | chara
+      | chara { $$ = $1; }
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }

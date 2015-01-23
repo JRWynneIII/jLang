@@ -368,18 +368,6 @@ typedef std::vector<VarInitExprAST*> VariableList;
 
 Function* PrototypeAST::Codegen()
 {
-  //vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
-  //vector<Type*> PDoubles(Args.size(), Type::getDoublePtrTy(getGlobalContext()));
-  //vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
-  //vector<Type*> PInts(Args.size(), Type::getInt32PtrTy(getGlobalContext()));
-  //vector<Type*> Chars(Args.size(), Type::getInt8Ty(getGlobalContext()));
-  //vector<Type*> PChars(Args.size(), Type::getInt8PtrTy(getGlobalContext()));
-  //ArrayRef<Type*> argsRefD(Doubles);
-  //ArrayRef<Type*> argsRefPD(PDoubles);
-  //ArrayRef<Type*> argsRefI(Ints);
-  //ArrayRef<Type*> argsRefPI(PInts);
-  //ArrayRef<Type*> argsRefC(Chars);
-  //ArrayRef<Type*> argsRefPC(PChars);
   vector<Type*> argTypes;
   VariableList::const_iterator it;
   for (it = Args.begin(); it != Args.end(); it++)
