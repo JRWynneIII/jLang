@@ -34,9 +34,9 @@ static Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
 map<string, AllocaInst*> NamedValues;
 static FunctionPassManager *theFPM;
-PointerType* intPtr32 = PointerType::get(IntegerType::get(getGlobalContext(), 32), 0);
-PointerType* intPtr8 = PointerType::get(IntegerType::get(getGlobalContext(), 8), 0);
-PointerType* doublePtr = PointerType::get(IntegerType::get(getGlobalContext(), 64), 0);
+PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0);
+PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);
+PointerType* doublePtr = PointerType::get(Type::getDoubleTy(getGlobalContext()), 0);
 
 static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
 {
@@ -335,20 +335,57 @@ Value* IfExprAST::Codegen()
   return PN;
 }
 
+static Type *typeOf(VarInitExprAST* type) 
+{
+  if (type->getType() == "int") 
+  {
+    return Type::getInt32Ty(getGlobalContext());
+  }
+  else if (type->getType() == "double") 
+  {
+    return Type::getDoubleTy(getGlobalContext());
+  }
+  else if (type->getType() == "char") 
+  {
+    return Type::getInt8Ty(getGlobalContext());
+  }
+  else if (type->getType() == "chars") 
+  {
+    return Type::getInt8PtrTy(getGlobalContext());
+  }
+  else if (type->getType() == "ints") 
+  {
+    return Type::getInt32PtrTy(getGlobalContext());
+  }
+  else if (type->getType() == "doubles") 
+  {
+    return Type::getDoublePtrTy(getGlobalContext());
+  }
+  return 0;
+}
+
+typedef std::vector<VarInitExprAST*> VariableList;
+
 Function* PrototypeAST::Codegen()
 {
-  vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
-  vector<Type*> PDoubles(Args.size(), Type::getDoublePtrTy(getGlobalContext()));
-  vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
-  vector<Type*> PInts(Args.size(), Type::getInt32PtrTy(getGlobalContext()));
-  vector<Type*> Chars(Args.size(), Type::getInt8Ty(getGlobalContext()));
-  vector<Type*> PChars(Args.size(), Type::getInt8PtrTy(getGlobalContext()));
-  ArrayRef<Type*> argsRefD(Doubles);
-  ArrayRef<Type*> argsRefPD(PDoubles);
-  ArrayRef<Type*> argsRefI(Ints);
-  ArrayRef<Type*> argsRefPI(PInts);
-  ArrayRef<Type*> argsRefC(Chars);
-  ArrayRef<Type*> argsRefPC(PChars);
+  //vector<Type*> Doubles(Args.size(), Type::getDoubleTy(getGlobalContext()));
+  //vector<Type*> PDoubles(Args.size(), Type::getDoublePtrTy(getGlobalContext()));
+  //vector<Type*> Ints(Args.size(), Type::getInt32Ty(getGlobalContext()));
+  //vector<Type*> PInts(Args.size(), Type::getInt32PtrTy(getGlobalContext()));
+  //vector<Type*> Chars(Args.size(), Type::getInt8Ty(getGlobalContext()));
+  //vector<Type*> PChars(Args.size(), Type::getInt8PtrTy(getGlobalContext()));
+  //ArrayRef<Type*> argsRefD(Doubles);
+  //ArrayRef<Type*> argsRefPD(PDoubles);
+  //ArrayRef<Type*> argsRefI(Ints);
+  //ArrayRef<Type*> argsRefPI(PInts);
+  //ArrayRef<Type*> argsRefC(Chars);
+  //ArrayRef<Type*> argsRefPC(PChars);
+  vector<Type*> argTypes;
+  VariableList::const_iterator it;
+  for (it = Args.begin(); it != Args.end(); it++)
+  {
+    argTypes.push_back(typeOf((*it)));
+  }
   FunctionType* FT;
   Function* F;
   if (Args.empty())
@@ -369,17 +406,17 @@ Function* PrototypeAST::Codegen()
   else 
   {
     if (Ty == "double")
-      FT = FunctionType::get(Builder.getDoubleTy(),argsRefD,false);
+      FT = FunctionType::get(Builder.getDoubleTy(),makeArrayRef(argTypes),false);
     else if (Ty == "doubles")
-      FT = FunctionType::get(Type::getDoublePtrTy(getGlobalContext()),argsRefPD,false);
+      FT = FunctionType::get(Type::getDoublePtrTy(getGlobalContext()),makeArrayRef(argTypes),false);
     else if (Ty == "int")
-      FT = FunctionType::get(Builder.getInt32Ty(),argsRefI,false);
+      FT = FunctionType::get(Builder.getInt32Ty(),makeArrayRef(argTypes),false);
     else if (Ty == "ints")
-      FT = FunctionType::get(Type::getInt32PtrTy(getGlobalContext()),argsRefPI,false);
+      FT = FunctionType::get(Type::getInt32PtrTy(getGlobalContext()),makeArrayRef(argTypes),false);
     else if (Ty == "char")
-      FT = FunctionType::get(Builder.getInt8Ty(),argsRefC,false);
+      FT = FunctionType::get(Builder.getInt8Ty(),makeArrayRef(argTypes),false);
     else if (Ty == "chars")
-      FT = FunctionType::get(Builder.getInt8PtrTy(),argsRefPC,false);
+      FT = FunctionType::get(Builder.getInt8PtrTy(),makeArrayRef(argTypes),false);
   }
   F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
   if(F->getName() != Name)
