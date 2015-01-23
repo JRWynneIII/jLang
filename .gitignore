@@ -3,7 +3,6 @@
 *.ll
 *.bc
 *.yy.c
-*.sh
 *.out
 jlangc
 *.s
