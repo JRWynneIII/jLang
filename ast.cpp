@@ -35,13 +35,15 @@ static IRBuilder<> Builder(getGlobalContext());
 map<string, AllocaInst*> NamedValues;
 static FunctionPassManager *theFPM;
 PointerType* intPtr32 = PointerType::get(IntegerType::get(getGlobalContext(), 32), 0);
+PointerType* intPtr8 = PointerType::get(IntegerType::get(getGlobalContext(), 8), 0);
+PointerType* doublePtr = PointerType::get(IntegerType::get(getGlobalContext(), 64), 0);
 
 static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
 {
   if (type == "double")
     return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
   else if (type == "doubles")
-    return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
+    return Builder.CreateAlloca(doublePtr, 0, VarName.c_str());
   else if (type == "int")
     return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "ints")
@@ -49,9 +51,7 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
   else if (type == "char")
     return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "chars")
-    return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
-  else if (type == "string")
-    return Builder.CreateAlloca(Type::getInt8PtrTy(getGlobalContext()),0,VarName.c_str());
+    return Builder.CreateAlloca(intPtr8, 0, VarName.c_str());
   return 0;
 }
 
@@ -127,7 +127,10 @@ Value* VarInitExprAST::Codegen()
     }
     Alloca = CreateEntryBlockAlloca(Name,Type);
     NamedValues[Name] = Alloca;
-    return Builder.CreateStore(Initial,Alloca);
+    if (Type == "doubles" || Type == "ints" || Type == "chars")
+      return Builder.CreateGEP(Alloca,Initial); 
+    else
+      return Builder.CreateStore(Initial,Alloca);
   }
   else
   {
@@ -248,7 +251,17 @@ Value* UnaryExprAST::Codegen()
       if (typeTab[RHS->getName()] == "int")
       {
         AllocaInst* allocaPtr = NamedValues[RHS->getName()];
-        return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0)); //Builder.CreateIntToPtr(R,Type::getInt32PtrTy(getGlobalContext()));
+        return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0)); 
+      }
+      else if (typeTab[RHS->getName()] == "double")
+      {
+        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getDoubleTy(getGlobalContext()),0.0)); 
+      }
+      else if (typeTab[RHS->getName()] == "char")
+      {
+        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt8Ty(getGlobalContext()),0)); 
       }
     default: break;
   }
