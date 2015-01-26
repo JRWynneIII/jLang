@@ -4,11 +4,13 @@
 #include<iostream>
 #include<map>
 #include<vector>
+#include<stack>
 std::map<std::string,double> varTable;
 std::map<std::string,std::string> typeTab;
 std::map<std::string,std::string> varStringTbl;
 std::vector<VarInitExprAST*> args;
-std::vector<ExprAST*> lines;
+std::stack<std::vector<ExprAST*>* > parseStack;
+std::vector<ExprAST*>* lines = new std::vector<ExprAST*>();
 std::vector<ExprAST*> callArgs;
 extern int yylex(void);
 extern void storeVar(char*,double);
@@ -49,6 +51,7 @@ void yyerror(char const *s)
   CharExprAST* charAST;
   UnaryExprAST* uo;
   ForExprAST* fLoop;
+  std::vector<ExprAST*>* blk;
 };
 
 %token NUMBER FLOAT
@@ -107,27 +110,30 @@ void yyerror(char const *s)
 %type <proto> extern
 %type <strVal> pointerType
 %type <fLoop> forLoop
+%type <blk> block
+%type <blk> expressions
+%type <blk> expression
 
 %start program
 
 %%
 program: expressions
 
-expressions: expressions expression
-           | expression
+expressions: expressions expression 
+           | expression { $$ = $1; }
 
-expression: varDef  { lines.push_back($1); }
-          | funcDef  { createfuncDef(new FunctionAST($1,lines)); lines.clear(); NamedValues.clear(); }
+expression: varDef  { lines->push_back($1); }
+          | funcDef  { createfuncDef(new FunctionAST($1,*lines)); lines->clear(); NamedValues.clear(); }
           | kernelDef 
           | modImport 
-          | forLoop { lines.push_back($1); }
+          | forLoop { lines->push_back($1); }
           | extern { createExtern($1); }
-          | funcCall  { lines.push_back($1); }
-          | ifBranch  { lines.push_back($1); }
-          | binOp  { lines.push_back($1); }
-          | chara { lines.push_back($1); }
-          | unaryOp {lines.push_back($1); }
-          | ID  { lines.push_back(new VariableExprAST($1,typeTab[$1])); }
+          | funcCall  { lines->push_back($1); }
+          | ifBranch  { lines->push_back($1);}
+          | binOp  { lines->push_back($1); }
+          | chara { lines->push_back($1); }
+          | unaryOp {lines->push_back($1); }
+          | ID  { lines->push_back(new VariableExprAST($1,typeTab[$1]));}
 
 modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
 
@@ -160,13 +166,17 @@ varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
 
-paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); cout << "Parameter defined!\n"; }
+paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); }
 
-block: LBRACE expressions RBRACE
-     | LBRACE RBRACE
+openBlock: LBRACE { parseStack.push(lines); lines = new vector<ExprAST*>(); }
 
-forLoop: FOR ID EQUAL numVal COMMA numVal block               /*{ $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),$7); }
-       | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  { $$ = new ForExprAST($2,$4,$6,$8,$9); } */
+closeBlock: RBRACE { lines = parseStack.top(); parseStack.pop(); }
+
+block: openBlock expressions closeBlock 
+     | openBlock closeBlock
+
+forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines; $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),tmp); } 
+       | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  /*{ $$ = new ForExprAST($2,$4,$6,$8,$9); } */
 
 elseBranch: ELSE block
           | ELIF block elseBranch

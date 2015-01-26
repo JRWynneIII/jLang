@@ -83,6 +83,68 @@ Value* stringExprAST::Codegen()
   return ConstantDataArray::get(getGlobalContext(), chars);
 }
 
+Value* ForExprAST::Codegen()
+{
+  Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  // Get alloca for the variable in the entry block.
+  AllocaInst *Alloca = NamedValues[VarName];
+  Value *StartVal = Start->Codegen();
+  if (StartVal == 0)
+    return 0;
+  // Store the value into the alloca.
+  Builder.CreateStore(StartVal, Alloca);
+
+  BasicBlock *LoopBB = BasicBlock::Create(getGlobalContext(), "loop", TheFunction);
+
+  // Insert an explicit fall through from the current block to the LoopBB.
+  Builder.CreateBr(LoopBB);
+  Builder.SetInsertPoint(LoopBB);
+
+  //Save old value if it already exists
+  AllocaInst *OldVal = NamedValues[VarName];
+  NamedValues[VarName] = Alloca;
+
+  vector<ExprAST*>::iterator it = Body.begin();
+  for(it = Body.begin(); it != Body.end(); it++)
+  {
+    if((*it)->Codegen() == 0)
+      return 0;
+  }
+
+  Value *StepVal;
+  if (Step) 
+  {
+    StepVal = Step->Codegen();
+    if (StepVal == 0)
+      return 0;
+  } 
+  else 
+  {
+    StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
+  }
+  Value *EndCond = End->Codegen();
+  if (EndCond == 0)
+    return EndCond;
+
+  Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());
+  Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
+  Builder.CreateStore(NextVar, Alloca);
+
+  EndCond = Builder.CreateICmpNE(EndCond, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0), "loopcond");
+  BasicBlock *AfterBB = BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);
+  Builder.CreateCondBr(EndCond, LoopBB, AfterBB);
+  Builder.SetInsertPoint(AfterBB);
+
+  // Restore the variable
+  if (OldVal)
+    NamedValues[VarName] = OldVal;
+  else
+    NamedValues.erase(VarName);
+
+  // for expr always returns 0.0.
+  return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
+}
+
 Value* VariableExprAST::Codegen()
 {
   //does var exist?

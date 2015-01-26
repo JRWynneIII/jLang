@@ -37,9 +37,10 @@ public:
 class ForExprAST : public ExprAST
 {
   string VarName;
-  ExprAST *Start, *End, *Step, *Body;
+  ExprAST *Start, *End, *Step;
+  vector<ExprAST*> Body;
 public:
-  ForExprAST(const string &varname, ExprAST *start, ExprAST *end, ExprAST *step, ExprAST *body) : VarName(varname), Start(start), End(end), Body(body) {}
+  ForExprAST(const string &varname, ExprAST *start, ExprAST *end, ExprAST *step, vector<ExprAST*> body) : VarName(varname), Start(start), End(end), Body(body) {}
   virtual Value* Codegen();
 };
 
