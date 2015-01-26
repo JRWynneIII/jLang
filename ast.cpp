@@ -127,10 +127,7 @@ Value* VarInitExprAST::Codegen()
     }
     Alloca = CreateEntryBlockAlloca(Name,Type);
     NamedValues[Name] = Alloca;
-    if (Type == "doubles" || Type == "ints" || Type == "chars")
-      return Builder.CreateGEP(Alloca,Initial); 
-    else
-      return Builder.CreateStore(Initial,Alloca);
+    return Builder.CreateStore(Initial,Alloca);
   }
   else
   {

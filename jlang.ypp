@@ -165,8 +165,8 @@ paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); a
 block: LBRACE expressions RBRACE
      | LBRACE RBRACE
 
-forLoop: FOR ID EQUAL numVal COMMA numVal block               { $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),$7); }
-       | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  { $$ = new ForExprAST($2,$4,$6,$8,$9); }
+forLoop: FOR ID EQUAL numVal COMMA numVal block               /*{ $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),$7); }
+       | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  { $$ = new ForExprAST($2,$4,$6,$8,$9); } */
 
 elseBranch: ELSE block
           | ELIF block elseBranch
