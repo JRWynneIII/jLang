@@ -10,8 +10,10 @@ std::map<std::string,std::string> typeTab;
 std::map<std::string,std::string> varStringTbl;
 std::vector<VarInitExprAST*> args;
 std::stack<std::vector<ExprAST*>* > parseStack;
-std::vector<ExprAST*>* lines = new std::vector<ExprAST*>();
+std::vector<ExprAST*> topLevel;
+std::vector<ExprAST*>* lines = &topLevel;
 std::vector<ExprAST*> callArgs;
+bool isFunc = false;
 extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
@@ -123,7 +125,7 @@ expressions: expressions expression
            | expression { $$ = $1; }
 
 expression: varDef  { lines->push_back($1); }
-          | funcDef  { createfuncDef(new FunctionAST($1,*lines)); lines->clear(); NamedValues.clear(); }
+          | funcDef  { createfuncDef(new FunctionAST($1,*lines)); isFunc = false; lines->clear(); NamedValues.clear(); }
           | kernelDef 
           | modImport 
           | forLoop { lines->push_back($1); }
@@ -168,9 +170,9 @@ paramDefs: paramDefs COMMA paramDef
 
 paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); }
 
-openBlock: LBRACE { parseStack.push(lines); lines = new vector<ExprAST*>(); }
+openBlock: LBRACE { if(!isFunc) { parseStack.push(lines); lines = new vector<ExprAST*>(); } else {} }
 
-closeBlock: RBRACE { lines = parseStack.top(); parseStack.pop(); }
+closeBlock: RBRACE  { if (!isFunc && lines != &topLevel) { lines = parseStack.top(); parseStack.pop(); } else {} } 
 
 block: openBlock expressions closeBlock 
      | openBlock closeBlock
@@ -191,8 +193,8 @@ kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
            | KERNEL ID LPAREN           RPAREN LARROW NUMBER
 
-funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear(); }
-         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); }
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear(); isFunc = true; }
+         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); isFunc = true; }
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
 

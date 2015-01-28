@@ -38,6 +38,16 @@ PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0
 PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);
 PointerType* doublePtr = PointerType::get(Type::getDoubleTy(getGlobalContext()), 0);
 
+void dumpVars()
+{
+  map<string,AllocaInst*>::iterator it;
+  cout << "\nDumping vars: \n";
+  for(it=NamedValues.begin();it!=NamedValues.end(); it++)
+  {
+    cout << it-> first << ": " << it->second << endl;
+  }
+}
+
 static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
 {
   if (type == "double")
@@ -88,8 +98,9 @@ Value* ForExprAST::Codegen()
   Function *TheFunction = Builder.GetInsertBlock()->getParent();
   // Get alloca for the variable in the entry block.
   AllocaInst *Alloca = NamedValues[VarName];
-  Value *StartVal = Start->Codegen();
-  if (StartVal == 0)
+  dumpVars();
+  Value *StartVal = dynamic_cast<IntExprAST*>(Start)->Codegen();
+  if (!StartVal)
     return 0;
   // Store the value into the alloca.
   Builder.CreateStore(StartVal, Alloca);
@@ -99,10 +110,6 @@ Value* ForExprAST::Codegen()
   // Insert an explicit fall through from the current block to the LoopBB.
   Builder.CreateBr(LoopBB);
   Builder.SetInsertPoint(LoopBB);
-
-  //Save old value if it already exists
-  AllocaInst *OldVal = NamedValues[VarName];
-  NamedValues[VarName] = Alloca;
 
   vector<ExprAST*>::iterator it = Body.begin();
   for(it = Body.begin(); it != Body.end(); it++)
@@ -134,12 +141,6 @@ Value* ForExprAST::Codegen()
   BasicBlock *AfterBB = BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);
   Builder.CreateCondBr(EndCond, LoopBB, AfterBB);
   Builder.SetInsertPoint(AfterBB);
-
-  // Restore the variable
-  if (OldVal)
-    NamedValues[VarName] = OldVal;
-  else
-    NamedValues.erase(VarName);
 
   // for expr always returns 0.0.
   return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
@@ -189,6 +190,7 @@ Value* VarInitExprAST::Codegen()
     }
     Alloca = CreateEntryBlockAlloca(Name,Type);
     NamedValues[Name] = Alloca;
+    dumpVars();
     return Builder.CreateStore(Initial,Alloca);
   }
   else
@@ -536,16 +538,6 @@ Function* FunctionAST::Codegen()
   //If it gets here there's an error! erase the function
   theFunction->eraseFromParent();
   return 0;
-}
-
-void dumpVars()
-{
-  map<string,AllocaInst*>::iterator it;
-  cout << "\nDumping vars: \n";
-  for(it=NamedValues.begin();it!=NamedValues.end(); it++)
-  {
-    cout << it-> first << ": " << it->second << endl;
-  }
 }
 
 int main(int argc, char*argv[])

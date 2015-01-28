@@ -153,13 +153,12 @@ public:
   void CreateArgumentAllocas(Function *F);
 };
 
-class FunctionAST 
+class FunctionAST : public ExprAST
 {
   PrototypeAST *Proto;
   vector<ExprAST*> Body;
 public:
-  FunctionAST(PrototypeAST *proto, vector<ExprAST*>& body)
-    : Proto(proto), Body(body) {}
+  FunctionAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
   
   Function *Codegen();
 };
