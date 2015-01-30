@@ -96,6 +96,7 @@ Value* stringExprAST::Codegen()
 Value* ForExprAST::Codegen()
 {
   Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  BasicBlock *PreheaderBB = Builder.GetInsertBlock();
   // Get alloca for the variable in the entry block.
   AllocaInst *Alloca = NamedValues[VarName];
   dumpVars();
@@ -110,6 +111,9 @@ Value* ForExprAST::Codegen()
   // Insert an explicit fall through from the current block to the LoopBB.
   Builder.CreateBr(LoopBB);
   Builder.SetInsertPoint(LoopBB);
+
+  PHINode *Variable = Builder.CreatePHI(Type::getInt32Ty(getGlobalContext()), 2, VarName.c_str());
+  Variable->addIncoming(StartVal, PreheaderBB);
 
   vector<ExprAST*>::iterator it = Body.begin();
   for(it = Body.begin(); it != Body.end(); it++)
@@ -137,12 +141,14 @@ Value* ForExprAST::Codegen()
   Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
   Builder.CreateStore(NextVar, Alloca);
 
-  EndCond = Builder.CreateICmpNE(EndCond, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0), "loopcond");
+  EndCond = Builder.CreateICmpNE(EndCond, CurVar/*ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0)*/, "loopcond");
+
+  BasicBlock *LoopEnd = Builder.GetInsertBlock();
   BasicBlock *AfterBB = BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);
   Builder.CreateCondBr(EndCond, LoopBB, AfterBB);
   Builder.SetInsertPoint(AfterBB);
+  Variable->addIncoming(NextVar,LoopEnd);
 
-  // for expr always returns 0.0.
   return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
 }
 
@@ -540,6 +546,8 @@ Function* FunctionAST::Codegen()
   return 0;
 }
 
+extern vector<ExprAST*>* lines;
+
 int main(int argc, char*argv[])
 {
   LLVMContext &Context = getGlobalContext();
@@ -549,6 +557,19 @@ int main(int argc, char*argv[])
   if (argc >1)
     yyin = fopen(argv[1],"r");
   yyparse();
+
+  //Codegen all the functions
+  vector<ExprAST*>::iterator it;
+  Value* cur;
+  for(it = lines->begin(); it != lines->end(); it++)
+  {
+    cur = (*it)->Codegen();
+    if(!cur)
+    {
+      cerr << "\033[31m INTERNAL ERROR: \033[37m Error in reading AST " << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
 
   FunctionPassManager opt(theModule);
   opt.add(createBasicAliasAnalysisPass());

@@ -13,7 +13,6 @@ std::stack<std::vector<ExprAST*>* > parseStack;
 std::vector<ExprAST*> topLevel;
 std::vector<ExprAST*>* lines = &topLevel;
 std::vector<ExprAST*> callArgs;
-bool isFunc = false;
 extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
@@ -125,7 +124,7 @@ expressions: expressions expression
            | expression { $$ = $1; }
 
 expression: varDef  { lines->push_back($1); }
-          | funcDef  { createfuncDef(new FunctionAST($1,*lines)); isFunc = false; lines->clear(); NamedValues.clear(); }
+          | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | kernelDef 
           | modImport 
           | forLoop { lines->push_back($1); }
@@ -170,14 +169,14 @@ paramDefs: paramDefs COMMA paramDef
 
 paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); }
 
-openBlock: LBRACE { if(!isFunc) { parseStack.push(lines); lines = new vector<ExprAST*>(); } else {} }
+openBlock: LBRACE {  parseStack.push(lines); lines = new vector<ExprAST*>(); } 
 
-closeBlock: RBRACE  { if (!isFunc && lines != &topLevel) { lines = parseStack.top(); parseStack.pop(); } else {} } 
+closeBlock: RBRACE  
 
 block: openBlock expressions closeBlock 
      | openBlock closeBlock
 
-forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines; $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),tmp); } 
+forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines; $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),tmp); lines = parseStack.top(); parseStack.pop();  } 
        | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  /*{ $$ = new ForExprAST($2,$4,$6,$8,$9); } */
 
 elseBranch: ELSE block
@@ -193,8 +192,8 @@ kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
            | KERNEL ID LPAREN           RPAREN LARROW NUMBER
 
-funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear(); isFunc = true; }
-         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear(); isFunc = true; }
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
+         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
 
@@ -215,3 +214,22 @@ binOp: numVal
      | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
      | binOp DIV binOp { $$ = new BinaryExprAST('/',$1,$3); }
      | binOp MUL binOp { $$ = new BinaryExprAST('*',$1,$3); }
+
+
+
+/*
+
+                          : curVec = topLevelVec
+
+extern func name() -> int : curvec.push_back(externnode)
+
+func main() -> int        : stack.push(curVec); curVec = new Vector;
+  int a = 0               : curVec.push_back(intNode)
+  for a=0,10              : stack.push(curVec); curVec = new Vector;
+    a++                   : curVec.push_back(binOpNode)
+  }                       : tmp = new ForLoopNode(*curVec); curVec = stack.top(); stack.pop(); curVec.push_back(tmp);
+  1                       : curVec.push_back(intNode)
+}                         : tmp = new funcNode(*curVec)); curvec = stack.top(); stack.pop(); curVec.push_back(tmp);
+
+After parse, the tree will exist in curVec(topLevelVec). Now iteration and code generation can run
+*/
