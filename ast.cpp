@@ -115,12 +115,10 @@ Value* ForExprAST::Codegen()
   PHINode *Variable = Builder.CreatePHI(Type::getInt32Ty(getGlobalContext()), 2, VarName.c_str());
   Variable->addIncoming(StartVal, PreheaderBB);
 
-  vector<ExprAST*>::iterator it = Body.begin();
-  for(it = Body.begin(); it != Body.end(); it++)
-  {
-    if((*it)->Codegen() == 0)
-      return 0;
-  }
+  Value *EndCond = End->Codegen();
+  if (EndCond == 0)
+    return EndCond;
+
 
   Value *StepVal;
   if (Step) 
@@ -133,15 +131,20 @@ Value* ForExprAST::Codegen()
   {
     StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
   }
-  Value *EndCond = End->Codegen();
-  if (EndCond == 0)
-    return EndCond;
+
 
   Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());
   Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
   Builder.CreateStore(NextVar, Alloca);
 
-  EndCond = Builder.CreateICmpNE(EndCond, CurVar/*ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0)*/, "loopcond");
+  EndCond = Builder.CreateICmpSLT(CurVar, EndCond, "loopcond");
+  vector<ExprAST*>::iterator it = Body.begin();
+  for(it = Body.begin(); it != Body.end(); it++)
+  {
+    if((*it)->Codegen() == 0)
+      return 0;
+  }
+
 
   BasicBlock *LoopEnd = Builder.GetInsertBlock();
   BasicBlock *AfterBB = BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);
