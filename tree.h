@@ -19,10 +19,13 @@
 using namespace std;
 using namespace llvm;
 
+extern map<string,string> typeTab;
+
 class ExprAST 
 {
 public:
   virtual ~ExprAST() {}
+  virtual string getType() = 0;
   virtual Value *Codegen() = 0;
 };
 
@@ -31,6 +34,7 @@ class identExprAST : public ExprAST
 public:
   string Name;
   identExprAST(const string& name) : Name(name) {}
+  virtual string getType() { return typeTab[Name]; }
   virtual Value* Codegen() = 0;
 };
 
@@ -41,14 +45,19 @@ class ForExprAST : public ExprAST
   vector<ExprAST*> Body;
 public:
   ForExprAST(const string &varname, ExprAST *start, ExprAST *end, ExprAST *step, vector<ExprAST*> body) : VarName(varname), Start(start), End(end), Body(body) {}
+  virtual string getType() { return typeTab[VarName]; }
   virtual Value* Codegen();
 };
 
 class IfExprAST : public ExprAST
 {
-  ExprAST *Cond, *Then, *Else;
+  ExprAST *Cond;
+  vector<ExprAST*> Else, Then;
+  bool hasElse;
 public:
-  IfExprAST(ExprAST *cond, ExprAST *then, ExprAST *_else) : Cond(cond), Then(then), Else(_else) {}
+  IfExprAST(ExprAST *cond, vector<ExprAST*> then, vector<ExprAST*> _else) : Cond(cond), Then(then), Else(_else) { hasElse = true; }
+  IfExprAST(ExprAST *cond, vector<ExprAST*> then) : Cond(cond), Then(then) { hasElse = false; }
+  virtual string getType() { return Cond->getType(); }
   virtual Value *Codegen();
 };
 
@@ -58,6 +67,7 @@ class IntExprAST : public ExprAST
 public:
   int Val;
   IntExprAST(double val) : Val(val) {}
+  virtual string getType() { return "int"; }
   virtual Value *Codegen();
 };
 
@@ -66,6 +76,7 @@ class DoubleExprAST : public ExprAST
 public:
   double Val;
   DoubleExprAST(double val) : Val(val) {}
+  virtual string getType() { return "double"; }
   virtual Value *Codegen();
 };
 
@@ -75,6 +86,7 @@ public:
   const char* Val;
   double Size;
   stringExprAST(const char* val, double size) : Val(val), Size(size) {}
+  virtual string getType() { return "string"; }
   virtual Value* Codegen();
 };
 
@@ -83,6 +95,7 @@ class CharExprAST : public ExprAST
 public:
   char Val;
   CharExprAST(char val) : Val(val) {}
+  virtual string getType() { return "char"; }
   virtual Value* Codegen();
 };
 
@@ -93,7 +106,7 @@ class VariableExprAST : public ExprAST
 public:
   VariableExprAST(const string &name, const string &type) : Name(name), Type(type) {}
   const string &getName() const { return Name; }
-  const string &getType() const { return Type; }
+  virtual string getType() { return Type; }
   virtual Value *Codegen();
 };
 
@@ -105,7 +118,7 @@ class VarInitExprAST : public ExprAST
 public:
   VarInitExprAST(const string &name, const string &type, ExprAST* initd) : Name(name), Type(type), Initd(initd) {}
   const string &getName() const { return Name; }
-  const string &getType() const { return Type; }
+  virtual string getType() { return Type; }
   virtual Value* Codegen();
 };
 
@@ -117,6 +130,8 @@ class BinaryExprAST : public ExprAST
 public:
   BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) : Op(op), LHS(lhs), RHS(rhs) {}
   BinaryExprAST(char op, const string& var, ExprAST *rhs) : Op(op), Var(var), RHS(rhs) {}
+  virtual string getType() { return LHS->getType(); }
+  string getLHSVar() { return dynamic_cast<VariableExprAST*>(LHS)->getName(); }
   virtual Value *Codegen();
 };
 
@@ -126,6 +141,7 @@ class UnaryExprAST : public ExprAST
   VariableExprAST *RHS;
 public:
   UnaryExprAST(char op, VariableExprAST *rhs) : Op(op), RHS(rhs) {}
+  virtual string getType() { return RHS->getType(); }
   virtual Value* Codegen();
 };
 
@@ -134,8 +150,8 @@ class CallExprAST : public ExprAST
   string Callee;
   vector<ExprAST*> Args;
 public:
-  CallExprAST(const string &callee, vector<ExprAST*> &args)
-    : Callee(callee), Args(args) {}
+  CallExprAST(const string &callee, vector<ExprAST*> &args) : Callee(callee), Args(args) {}
+  virtual string getType() { return "None"; }
   virtual Value *Codegen();
 };
 
@@ -145,9 +161,8 @@ class PrototypeAST
   vector<VarInitExprAST*> Args;
   string Ty;
 public:
-  PrototypeAST(const string &name, const vector<VarInitExprAST*> &args, const string& type)
-    : Name(name), Args(args), Ty(type) {}
-  string getType() { return Ty; }
+  PrototypeAST(const string &name, const vector<VarInitExprAST*> &args, const string& type) : Name(name), Args(args), Ty(type) {}
+  virtual string getType() { return Ty; }
   
   Function *Codegen();
   void CreateArgumentAllocas(Function *F);
@@ -159,6 +174,7 @@ class FunctionAST : public ExprAST
   vector<ExprAST*> Body;
 public:
   FunctionAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
+  virtual string getType() { return Proto->getType(); }
   
   Function *Codegen();
 };

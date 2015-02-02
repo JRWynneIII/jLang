@@ -60,7 +60,7 @@ void yyerror(char const *s)
 %token FUNC KERNEL EXTERN FOR IF ELSE ELIF MODULE RETURN
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
-%token EQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
+%token EQUAL COMPEQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
 
 %left EQUAL;
 %left LT GT LTE GTE;
@@ -103,6 +103,7 @@ void yyerror(char const *s)
 %type <proto> funcProto
 %type <functionCall> funcCall
 %type <_if> ifBranch
+%type <blk> elseBranch
 %type <bo> binOp
 %type <expr> numVal
 %type <expr> funcParams
@@ -179,11 +180,10 @@ block: openBlock expressions closeBlock
 forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines; $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),tmp); lines = parseStack.top(); parseStack.pop();  } 
        | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  /*{ $$ = new ForExprAST($2,$4,$6,$8,$9); } */
 
-elseBranch: ELSE block
-          | ELIF block elseBranch
+elseBranch: ELSE block               { $$ = $2; }
 
-ifBranch: IF expression block 
-        | IF expression block elseBranch
+ifBranch: IF binOp block             { cout<< "IF" << endl; vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,tmp); lines = parseStack.top(); parseStack.pop(); }
+        | IF binOp block elseBranch  { vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,*$3,*$4); lines = parseStack.top(); parseStack.pop();}
 
 funcDef: funcProto block { $$ = $1; }
 
@@ -204,16 +204,18 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }
-     | ID PLUS ID { $$ = new BinaryExprAST('+', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
+   /*  | ID PLUS ID { $$ = new BinaryExprAST('+', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
      | ID MINUS ID { $$ = new BinaryExprAST('-', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
      | ID DIV ID { $$ = new BinaryExprAST('/', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
      | ID MUL ID { $$ = new BinaryExprAST('*', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); }
+     | ID LT ID { $$ = new BinaryExprAST('<', new VariableExprAST($1,typeTab[$1]), new VariableExprAST($3,typeTab[$3])); } */
      | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
      | ID EQUAL unaryOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]), $3); }
      | binOp PLUS binOp { $$ = new BinaryExprAST('+',$1,$3); }
      | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
      | binOp DIV binOp { $$ = new BinaryExprAST('/',$1,$3); }
      | binOp MUL binOp { $$ = new BinaryExprAST('*',$1,$3); }
+     | binOp LT binOp { $$ = new BinaryExprAST('<', $1, $3); }
 
 
 

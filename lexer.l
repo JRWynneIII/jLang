@@ -34,6 +34,7 @@ NUMBER [0-9]+
 "->" { return RARROW; }
 "<-" { return LARROW; }
 "=" { return EQUAL; }
+"=" { return COMPEQUAL; }
 ">" { return GT; }
 "<" { return LT; }
 ">=" { return GTE; }

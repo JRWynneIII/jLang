@@ -28,7 +28,6 @@ using namespace std;
 using namespace llvm;
 
 extern FILE* yyin;
-extern map<string,string> typeTab;
 
 Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
@@ -293,8 +292,15 @@ err:
       else
         return Builder.CreateUDiv(L, R, "addtmp");
     case '<':
-      L = Builder.CreateFCmpULT(L, R, "cmptmp");
-      return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+      if(!isInt) {
+        L = Builder.CreateFCmpULT(L, R, "cmptmp");
+        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+      }
+      else 
+      {
+        L = Builder.CreateICmpULT(L, R, "cmptmp");
+        return Builder.CreateSExt(L, Type::getInt32Ty(getGlobalContext()), "booltmp");
+      }
     default: break;
   }
   
@@ -371,38 +377,51 @@ Value* IfExprAST::Codegen()
   Value* CondV = Cond->Codegen();
   if(CondV == 0)
     return 0;
-  Builder.CreateFCmpONE(CondV, ConstantFP::get(getGlobalContext(), APFloat(0.0)), "ifcond");
+  string ty = Cond->getType();
+  string condVar = dynamic_cast<BinaryExprAST*>(Cond)->getLHSVar();
+  if (ty == "double")
+    Builder.CreateFCmpONE(CondV, ConstantFP::get(getGlobalContext(), APFloat(0.0)), "ifcond");
+  else if (ty == "int")
+    Builder.CreateICmpNE(CondV, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0), "ifcond");
+  else
+    return 0;
   Function* theFunction = Builder.GetInsertBlock()->getParent();
 
   BasicBlock* ThenBB = BasicBlock::Create(getGlobalContext(), "then", theFunction);
   BasicBlock* ElseBB = BasicBlock::Create(getGlobalContext(), "else");
   BasicBlock* MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
 
-  Builder.CreateCondBr(CondV, ThenBB, ElseBB);
+  Value* sCond = Builder.CreateSExtOrTrunc(CondV, Type::getInt1Ty(getGlobalContext()));
+  if(hasElse)
+    Builder.CreateCondBr(sCond, ThenBB, ElseBB);
+  else
+    Builder.CreateCondBr(sCond, ThenBB, MergeBB);
   Builder.SetInsertPoint(ThenBB);
 
-  Value* ThenV = Then->Codegen();
-  if (ThenV == 0)
-    return 0;
+  vector<ExprAST*>::iterator it;
+  for (it = Then.begin(); it != Then.end(); it++)
+    (*it)->Codegen();
+
   Builder.CreateBr(MergeBB);
   ThenBB = Builder.GetInsertBlock();
   
   theFunction->getBasicBlockList().push_back(ElseBB);
   Builder.SetInsertPoint(ElseBB);
 
-  Value* ElseV = Else->Codegen();
-  if (ElseV == 0)
-    return 0;
+  if(hasElse) 
+  {
+    vector<ExprAST*>::iterator it;
+    for (it = Else.begin(); it != Else.end(); it++)
+      (*it)->Codegen();
 
-  Builder.CreateBr(MergeBB);
-  ElseBB = Builder.GetInsertBlock();
-
+    Builder.CreateBr(MergeBB);
+    ElseBB = Builder.GetInsertBlock();
+  }
+  else
+    Builder.CreateBr(MergeBB);
   theFunction->getBasicBlockList().push_back(MergeBB);
   Builder.SetInsertPoint(MergeBB);
-  PHINode* PN = Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()),2,"iftmp");
-  PN->addIncoming(ThenV,ThenBB);
-  PN->addIncoming(ElseV,ElseBB);
-  return PN;
+  return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
 }
 
 static Type *typeOf(VarInitExprAST* type) 
