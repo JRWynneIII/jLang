@@ -301,6 +301,56 @@ err:
         L = Builder.CreateICmpULT(L, R, "cmptmp");
         return Builder.CreateSExt(L, Type::getInt32Ty(getGlobalContext()), "booltmp");
       }
+    case '>':
+      if(!isInt) {
+        L = Builder.CreateFCmpUGT(L, R, "cmptmp");
+        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+      }
+      else 
+      {
+        L = Builder.CreateICmpUGT(L, R, "cmptmp");
+        return Builder.CreateSExt(L, Type::getInt32Ty(getGlobalContext()), "booltmp");
+      }
+    case 'G':
+      if(!isInt) {
+        L = Builder.CreateFCmpUGE(L, R, "cmptmp");
+        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+      }
+      else 
+      {
+        L = Builder.CreateICmpUGE(L, R, "cmptmp");
+        return Builder.CreateSExt(L, Type::getInt32Ty(getGlobalContext()), "booltmp");
+      }
+    case 'L':
+      if(!isInt) {
+        L = Builder.CreateFCmpULE(L, R, "cmptmp");
+        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+      }
+      else 
+      {
+        L = Builder.CreateICmpULE(L, R, "cmptmp");
+        return Builder.CreateSExt(L, Type::getInt32Ty(getGlobalContext()), "booltmp");
+      }
+    case 'N':
+      if(!isInt) {
+        L = Builder.CreateFCmpUNE(L, R, "cmptmp");
+        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+      }
+      else 
+      {
+        L = Builder.CreateICmpNE(L, R, "cmptmp");
+        return Builder.CreateSExt(L, Type::getInt32Ty(getGlobalContext()), "booltmp");
+      }
+    case 'E':
+      if(!isInt) {
+        L = Builder.CreateFCmpUEQ(L, R, "cmptmp");
+        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+      }
+      else 
+      {
+        L = Builder.CreateICmpEQ(L, R, "cmptmp");
+        return Builder.CreateSExt(L, Type::getInt32Ty(getGlobalContext()), "booltmp");
+      }
     default: break;
   }
   
