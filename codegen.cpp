@@ -30,10 +30,10 @@ using namespace llvm;
 extern FILE* yyin;
 extern map<string,string> typeTab;
 
-static Module *theModule;
+Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
 map<string, AllocaInst*> NamedValues;
-static FunctionPassManager *theFPM;
+FunctionPassManager *theFPM;
 PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0);
 PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);
 PointerType* doublePtr = PointerType::get(Type::getDoubleTy(getGlobalContext()), 0);
@@ -547,45 +547,4 @@ Function* FunctionAST::Codegen()
   //If it gets here there's an error! erase the function
   theFunction->eraseFromParent();
   return 0;
-}
-
-extern vector<ExprAST*>* lines;
-
-int main(int argc, char*argv[])
-{
-  LLVMContext &Context = getGlobalContext();
-  theModule = new Module("jlangc", Context);
-
-  
-  if (argc >1)
-    yyin = fopen(argv[1],"r");
-  yyparse();
-
-  //Codegen all the functions
-  vector<ExprAST*>::iterator it;
-  Value* cur;
-  for(it = lines->begin(); it != lines->end(); it++)
-  {
-    cur = (*it)->Codegen();
-    if(!cur)
-    {
-      cerr << "\033[31m INTERNAL ERROR: \033[37m Error in reading AST " << endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  FunctionPassManager opt(theModule);
-  opt.add(createBasicAliasAnalysisPass());
-  opt.add(createPromoteMemoryToRegisterPass());
-  opt.add(createInstructionCombiningPass());
-  opt.add(createReassociatePass());
-  opt.add(createGVNPass());
-  opt.add(createCFGSimplificationPass());
-  opt.doInitialization();
-  theModule->dump();
-
-  string Errors, ErrorCatch;
-  raw_fd_ostream bcFile("t.ll", Errors, sys::fs::F_Binary);
-  WriteBitcodeToFile(theModule,bcFile);
-  return EXIT_SUCCESS;
 }

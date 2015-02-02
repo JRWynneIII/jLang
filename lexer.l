@@ -59,7 +59,8 @@ NUMBER [0-9]+
 "," { return COMMA; }
 ":" { return COLON; }
 ";" { return SEMICOLON; }
-'\\n' { yylval.charVal = '\n'; cout << "ENDLINE"; return CHARACTER; }
+'\\n' { yylval.charVal = '\n'; return CHARACTER; }
+'*' { yylval.charVal = '*'; return CHARACTER; }
 \'[a-zA-Z]\' { yylval.charVal = yytext[1]; return CHARACTER; }
 [a-z_][a-zA-Z0-9_]* { yylval.strVal = strdup(yytext); return ID; }
 \"([^"]|\\.)*\" { yylval.strVal = strdup(yytext); return STRING; }
