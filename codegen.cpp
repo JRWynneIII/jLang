@@ -436,6 +436,7 @@ Value* IfExprAST::Codegen()
   else
     return 0;
   Function* theFunction = Builder.GetInsertBlock()->getParent();
+  BasicBlock* Entry = Builder.GetInsertBlock();
 
   BasicBlock* ThenBB = BasicBlock::Create(getGlobalContext(), "then", theFunction);
   BasicBlock* ElseBB = BasicBlock::Create(getGlobalContext(), "else");
@@ -446,31 +447,38 @@ Value* IfExprAST::Codegen()
     Builder.CreateCondBr(sCond, ThenBB, ElseBB);
   else
     Builder.CreateCondBr(sCond, ThenBB, MergeBB);
+  //Create Then block
   Builder.SetInsertPoint(ThenBB);
 
   vector<ExprAST*>::iterator it;
+  Value* Tlast; 
   for (it = Then.begin(); it != Then.end(); it++)
-    (*it)->Codegen();
+    Tlast = (*it)->Codegen();
 
   Builder.CreateBr(MergeBB);
   ThenBB = Builder.GetInsertBlock();
-  
-  theFunction->getBasicBlockList().push_back(ElseBB);
-  Builder.SetInsertPoint(ElseBB);
-
+  //Create Else Block
+  Value* Elast;
   if(hasElse) 
   {
+    theFunction->getBasicBlockList().push_back(ElseBB);
+    Builder.SetInsertPoint(ElseBB);
+
     vector<ExprAST*>::iterator it;
     for (it = Else.begin(); it != Else.end(); it++)
-      (*it)->Codegen();
+      Elast = (*it)->Codegen();
 
     Builder.CreateBr(MergeBB);
     ElseBB = Builder.GetInsertBlock();
   }
-  else
-    Builder.CreateBr(MergeBB);
+
+  //Set up merge block
   theFunction->getBasicBlockList().push_back(MergeBB);
   Builder.SetInsertPoint(MergeBB);
+  PHINode *PN = Builder.CreatePHI(Type::getLabelTy(getGlobalContext()), 2, "iftmp");
+  PN->addIncoming(ElseBB, Entry);
+  PN->addIncoming(ThenBB, Entry);
+
   return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
 }
 
