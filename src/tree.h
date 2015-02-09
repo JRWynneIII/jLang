@@ -106,7 +106,7 @@ class VariableExprAST : public ExprAST
 public:
   VariableExprAST(const string &name, const string &type) : Name(name), Type(type) {}
   const string &getName() const { return Name; }
-  virtual string getType() { return Type; }
+  virtual string getType() { return typeTab[Name]; }
   virtual Value *Codegen();
 };
 
@@ -132,6 +132,7 @@ public:
   BinaryExprAST(char op, const string& var, ExprAST *rhs) : Op(op), Var(var), RHS(rhs) {}
   virtual string getType() { return LHS->getType(); }
   string getLHSVar() { return dynamic_cast<VariableExprAST*>(LHS)->getName(); }
+  string getRHSVar() { return dynamic_cast<VariableExprAST*>(RHS)->getName(); }
   virtual Value *Codegen();
 };
 

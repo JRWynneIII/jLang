@@ -170,7 +170,6 @@ Value* VariableExprAST::Codegen()
 
 Value* VarInitExprAST::Codegen()
 {
-  cout << "Codegen'ing new variable...\n";
   if (NamedValues.find(Name) == NamedValues.end())
   {
     AllocaInst* Alloca;
@@ -214,7 +213,6 @@ Value* BinaryExprAST::Codegen()
 {
   if(Op == '=')
   {
-    cout << "Codegen'ing binary op....\n";
     VariableExprAST* LHSE = dynamic_cast<VariableExprAST*>(LHS);
     if (!LHSE)
     {
@@ -244,6 +242,186 @@ Value* BinaryExprAST::Codegen()
   Value *R = RHS->Codegen();
   if (L == 0 || R == 0) return 0;
 
+  string lty = LHS->getType();
+  string rty = RHS->getType();
+
+
+  if(rty == "ints" || lty == "ints" || lty == "doubles" || rty == "doubles" || rty == "chars" || lty == "chars")
+  {
+   
+    bool ptrIsLeft = true;
+
+    cout << "LTY:" <<  lty << " RTY: " << rty << " " << endl;
+    if(lty != "ints" && lty != "doubles" && lty != "chars")
+    {
+      ptrIsLeft = false;
+    }
+    if(!ptrIsLeft && (rty != "ints" && rty != "doubles" && rty != "chars"))
+    {
+      cerr << "\033[31m ERROR: \033[37m Binary Operation can not be done!" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    Value* iptr;
+    switch(Op)
+    {
+      case '+':
+        Value* afterAdd;
+        if(ptrIsLeft)
+        {
+          iptr = Builder.CreatePtrToInt(L,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(lty == "ints")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(lty == "doubles")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(lty == "chars")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          cout << iptr->getType() << endl;
+          cout << step->getType() << endl;
+          afterAdd = Builder.CreateAdd(iptr,step,"ptrtmp");
+          if(lty == "ints")
+            return Builder.CreateIntToPtr(afterAdd,intPtr32);
+          else if(lty == "doubles")
+            return Builder.CreateIntToPtr(afterAdd,doublePtr);
+          else if(lty == "chars")
+            return Builder.CreateIntToPtr(afterAdd,intPtr8);
+        }
+        else
+        {
+          iptr = Builder.CreatePtrToInt(R,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(rty == "ints")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(rty == "doubles")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(rty == "chars")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          afterAdd = Builder.CreateAdd(iptr,L,"ptrtmp");
+          if(rty == "ints")
+            return Builder.CreateIntToPtr(afterAdd,intPtr32);
+          else if(rty == "doubles")
+            return Builder.CreateIntToPtr(afterAdd,doublePtr);
+          else if(rty == "chars")
+            return Builder.CreateIntToPtr(afterAdd,intPtr8);
+        }
+      case '-':
+        Value* afterSub;
+        if(ptrIsLeft)
+        {
+          iptr = Builder.CreatePtrToInt(L,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(lty == "ints")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(lty == "doubles")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(lty == "chars")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          afterSub = Builder.CreateSub(iptr,step,"ptrtmp");
+          if(lty == "ints")
+            return Builder.CreateIntToPtr(afterSub,intPtr32);
+          else if(lty == "doubles")
+            return Builder.CreateIntToPtr(afterSub,doublePtr);
+          else if(lty == "chars")
+            return Builder.CreateIntToPtr(afterSub,intPtr8);
+        }
+        else
+        {
+          iptr = Builder.CreatePtrToInt(R,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(rty == "ints")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(rty == "doubles")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(rty == "chars")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          afterSub = Builder.CreateSub(iptr,L,"ptrtmp");
+          if(rty == "ints")
+            return Builder.CreateIntToPtr(afterSub,intPtr32);
+          else if(rty == "doubles")
+            return Builder.CreateIntToPtr(afterSub,doublePtr);
+          else if(rty == "chars")
+            return Builder.CreateIntToPtr(afterSub,intPtr8);
+        }
+      case '*':
+        Value* afterMul;
+        if(ptrIsLeft)
+        {
+          iptr = Builder.CreatePtrToInt(L,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(lty == "ints")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(lty == "doubles")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(lty == "chars")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          afterMul = Builder.CreateMul(iptr,step,"ptrtmp");
+          if(lty == "ints")
+            return Builder.CreateIntToPtr(afterMul,intPtr32);
+          else if(lty == "doubles")
+            return Builder.CreateIntToPtr(afterMul,doublePtr);
+          else if(lty == "chars")
+            return Builder.CreateIntToPtr(afterMul,intPtr8);
+        }
+        else
+        {
+          iptr = Builder.CreatePtrToInt(R,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(rty == "ints")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(rty == "doubles")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(rty == "chars")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          afterMul = Builder.CreateMul(iptr,L,"ptrtmp");
+          if(rty == "ints")
+            return Builder.CreateIntToPtr(afterMul,intPtr32);
+          else if(rty == "doubles")
+            return Builder.CreateIntToPtr(afterMul,doublePtr);
+          else if(rty == "chars")
+            return Builder.CreateIntToPtr(afterMul,intPtr8);
+        }
+      case '/':
+        Value* afterDiv;
+        if(ptrIsLeft)
+        {
+          iptr = Builder.CreatePtrToInt(L,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(lty == "ints")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(lty == "doubles")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(lty == "chars")
+            step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          afterDiv = Builder.CreateUDiv(iptr,step,"ptrtmp");
+          if(lty == "ints")
+            return Builder.CreateIntToPtr(afterDiv,intPtr32);
+          else if(lty == "doubles")
+            return Builder.CreateIntToPtr(afterDiv,doublePtr);
+          else if(lty == "chars")
+            return Builder.CreateIntToPtr(afterDiv,intPtr8);
+        }
+        else
+        {
+          iptr = Builder.CreatePtrToInt(R,Type::getInt32Ty(getGlobalContext()));
+          Value* step;
+          if(rty == "ints")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),4));
+          else if(rty == "doubles")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
+          else if(rty == "chars")
+            step = Builder.CreateMul(L,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+          afterDiv = Builder.CreateUDiv(iptr,L,"ptrtmp");
+          if(rty == "ints")
+            return Builder.CreateIntToPtr(afterDiv,intPtr32);
+          else if(rty == "doubles")
+            return Builder.CreateIntToPtr(afterDiv,doublePtr);
+          else if(rty == "chars")
+            return Builder.CreateIntToPtr(afterDiv,intPtr8);
+        }
+      default: break;
+    }
+  }
   //Use the getValueID method on the R and L values to check for types/type clashes
   bool isInt = false;
   cout << L->getValueID() << "\t" << R->getValueID() << endl;
@@ -270,6 +448,7 @@ err:
     cerr << "\033[31m ERROR: \033[37m Types do not match!" << endl;
     exit(EXIT_FAILURE);
   }
+
   
   switch (Op) 
   {
@@ -504,15 +683,15 @@ static Type *typeOf(VarInitExprAST* type)
   }
   else if (type->getType() == "chars") 
   {
-    return Type::getInt8PtrTy(getGlobalContext());
+    return intPtr8;
   }
   else if (type->getType() == "ints") 
   {
-    return Type::getInt32PtrTy(getGlobalContext());
+    return intPtr32;
   }
   else if (type->getType() == "doubles") 
   {
-    return Type::getDoublePtrTy(getGlobalContext());
+    return doublePtr;
   }
   return 0;
 }
@@ -534,30 +713,30 @@ Function* PrototypeAST::Codegen()
     if (Ty == "double")
       FT = FunctionType::get(Builder.getDoubleTy(),false);
     else if (Ty == "doubles")
-      FT = FunctionType::get(Type::getDoublePtrTy(getGlobalContext()),false);
+      FT = FunctionType::get(doublePtr,false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),false);
     else if (Ty == "ints")
-      FT = FunctionType::get(Type::getInt32PtrTy(getGlobalContext()),false);
+      FT = FunctionType::get(intPtr32, false);
     else if (Ty == "char")
       FT = FunctionType::get(Builder.getInt8Ty(),false);
     else if (Ty == "chars")
-      FT = FunctionType::get(Builder.getInt8PtrTy(),false);
+      FT = FunctionType::get(intPtr8, false);
   }
   else 
   {
     if (Ty == "double")
       FT = FunctionType::get(Builder.getDoubleTy(),makeArrayRef(argTypes),false);
     else if (Ty == "doubles")
-      FT = FunctionType::get(Type::getDoublePtrTy(getGlobalContext()),makeArrayRef(argTypes),false);
+      FT = FunctionType::get(doublePtr,makeArrayRef(argTypes),false);
     else if (Ty == "int")
       FT = FunctionType::get(Builder.getInt32Ty(),makeArrayRef(argTypes),false);
     else if (Ty == "ints")
-      FT = FunctionType::get(Type::getInt32PtrTy(getGlobalContext()),makeArrayRef(argTypes),false);
+      FT = FunctionType::get(intPtr32,makeArrayRef(argTypes),false);
     else if (Ty == "char")
       FT = FunctionType::get(Builder.getInt8Ty(),makeArrayRef(argTypes),false);
     else if (Ty == "chars")
-      FT = FunctionType::get(Builder.getInt8PtrTy(),makeArrayRef(argTypes),false);
+      FT = FunctionType::get(intPtr8,makeArrayRef(argTypes),false);
   }
   F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
   if(F->getName() != Name)
@@ -591,13 +770,13 @@ Function* PrototypeAST::Codegen()
 
 void PrototypeAST::CreateArgumentAllocas(Function *F)
 {
-  //TODO: There needs to be a check of types for the arguments!
   Function::arg_iterator AI = F->arg_begin();
   for (unsigned Idx = 0, e = Args.size(); Idx != e; ++Idx, ++AI)
   {
     AllocaInst* Alloca = CreateEntryBlockAlloca(Args[Idx]->getName(), Args[Idx]->getType());
     Builder.CreateStore(AI,Alloca);
     NamedValues[Args[Idx]->getName()] = Alloca;
+    typeTab[Args[Idx]->getName()] = Args[Idx]->getType();
   }
 }
 

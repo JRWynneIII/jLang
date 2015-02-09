@@ -99,6 +99,7 @@ void yyerror(char const *s)
 %type <charVal> CHARACTER
 
 %type <strVal> dataType 
+%type <strVal> pointerType
 %type <varInit> varDef
 %type <proto> funcDef
 %type <proto> funcProto
@@ -111,7 +112,6 @@ void yyerror(char const *s)
 %type <charAST> chara
 %type <uo> unaryOp
 %type <proto> extern
-%type <strVal> pointerType
 %type <fLoop> forLoop
 %type <blk> block
 %type <blk> expressions
