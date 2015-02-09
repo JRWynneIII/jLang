@@ -10,4 +10,4 @@ lex.yy.c: lexer.l
 jlang.tab.cpp: jlang.ypp
 	bison -d jlang.ypp
 clean:
-	rm -rf lex.yy.c jlangc jlang.tab.cpp jlang.tab.h
+	rm -rf lex.yy.c jlangc jlang.tab.cpp jlang.tab.hpp
