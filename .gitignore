@@ -6,5 +6,5 @@
 *.out
 jlangc
 *.s
-test*
+test.*
 y

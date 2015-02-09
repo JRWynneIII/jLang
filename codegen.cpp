@@ -480,7 +480,6 @@ Value* IfExprAST::Codegen()
     Builder.CreateBr(MergeBB);
     ElseBB = Builder.GetInsertBlock();
   }
-  theModule->dump();
 
   //Set up merge block
   theFunction->getBasicBlockList().push_back(MergeBB);
