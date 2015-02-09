@@ -15,6 +15,8 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/User.h"
 #include <cctype>
 #include <cstdio>
 #include <map>
@@ -453,7 +455,14 @@ Value* IfExprAST::Codegen()
   vector<ExprAST*>::iterator it;
   Value* Tlast; 
   for (it = Then.begin(); it != Then.end(); it++)
+  {
     Tlast = (*it)->Codegen();
+    //if (dynamic_cast<Instruction*>(Tlast)->mayWriteToMemory())
+    //{
+    //  User* u;
+    //  Value* varVal = u->getOperand(0);
+    //}
+  }
 
   Builder.CreateBr(MergeBB);
   ThenBB = Builder.GetInsertBlock();
@@ -471,13 +480,11 @@ Value* IfExprAST::Codegen()
     Builder.CreateBr(MergeBB);
     ElseBB = Builder.GetInsertBlock();
   }
+  theModule->dump();
 
   //Set up merge block
   theFunction->getBasicBlockList().push_back(MergeBB);
   Builder.SetInsertPoint(MergeBB);
-  PHINode *PN = Builder.CreatePHI(Type::getLabelTy(getGlobalContext()), 2, "iftmp");
-  PN->addIncoming(ElseBB, Entry);
-  PN->addIncoming(ThenBB, Entry);
 
   return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
 }

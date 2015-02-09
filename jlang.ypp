@@ -180,7 +180,7 @@ block: openBlock expressions closeBlock
 forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines; $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),tmp); lines = parseStack.top(); parseStack.pop();  } 
        | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  /*{ $$ = new ForExprAST($2,$4,$6,$8,$9); } */
 
-elseBranch: ELSE block               { vector<ExprAST*> tmp = *lines; $$ = &tmp; }
+elseBranch: ELSE block               { vector<ExprAST*> tmp = *lines; $$ = &tmp; lines = parseStack.top(); parseStack.pop(); }
 
 ifBranch: IF binOp block             { vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,tmp); lines = parseStack.top(); parseStack.pop(); }
         | IF binOp block elseBranch  { vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,tmp,*$4); lines = parseStack.top(); parseStack.pop();}
