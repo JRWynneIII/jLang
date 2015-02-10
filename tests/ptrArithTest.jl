@@ -2,9 +2,7 @@ module stdio;
 
 extern func putchar(char c) -> int;
 
-func main() -> int {
-  char a
-  char^ ptr = a^
-    
-  1
+func incPtr(int^ a) -> int^ {
+  int^ b = a + 1
+  b
 }
