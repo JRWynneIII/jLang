@@ -2,9 +2,11 @@
 #include "tree.h"
 #include<stdio.h>
 #include<iostream>
+#include<cstring>
 #include<map>
 #include<vector>
 #include<stack>
+#include<boost/lexical_cast.hpp>
 std::map<std::string,double> varTable;
 std::map<std::string,std::string> typeTab;
 std::map<std::string,std::string> varStringTbl;
@@ -116,6 +118,9 @@ void yyerror(char const *s)
 %type <blk> block
 %type <blk> expressions
 %type <blk> expression
+%type <charVal> operators
+%type <strVal> funcName
+%type <strVal> modImport
 
 %start program
 
@@ -128,7 +133,7 @@ expressions: expressions expression
 expression: varDef  { lines->push_back($1); }
           | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | kernelDef 
-          | modImport 
+          | modImport { loadModule($1); }
           | forLoop { lines->push_back($1); }
           | extern { createExtern($1); }
           | funcCall  { lines->push_back($1); }
@@ -138,7 +143,7 @@ expression: varDef  { lines->push_back($1); }
           | unaryOp {lines->push_back($1); }
           | ID  { lines->push_back(new VariableExprAST($1,typeTab[$1]));}
 
-modImport: MODULE ID SEMICOLON { cout << "Module loaded: " << $2 << endl; }
+modImport: MODULE ID SEMICOLON { $$ = $2; }
 
 funcParams: ID { callArgs.push_back(new VariableExprAST($1,typeTab[$1])); }
           | numVal { callArgs.push_back($1); }
@@ -184,7 +189,9 @@ forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines;
 elseBranch: ELSE block               { tmpLines = *lines; $$ = &tmpLines; lines = parseStack.top(); parseStack.pop(); }
 
 ifBranch: IF binOp block             { vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,tmp); lines = parseStack.top(); parseStack.pop(); }
+        | IF unaryOp block           { vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,tmp); lines = parseStack.top(); parseStack.pop(); }
         | IF binOp block elseBranch  { vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,tmp,*$4); lines = parseStack.top(); parseStack.pop();}
+        | IF unaryOp block elseBranch  { vector<ExprAST*> tmp = *lines; $$ = new IfExprAST($2,tmp,*$4); lines = parseStack.top(); parseStack.pop();}
 
 funcDef: funcProto block { $$ = $1; }
 
@@ -193,10 +200,27 @@ kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
            | KERNEL ID LPAREN           RPAREN LARROW NUMBER
 
-funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
-         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
+funcName: ID operators { string str($1); str += boost::lexical_cast<string>((int)$2); char* str2 = new char[str.length() + 1]; strcpy(str2,str.c_str()); $$ = str2; }
+        | ID  { $$ = $1; }
+
+funcProto: FUNC funcName LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
+         | FUNC funcName LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
+       | operators ID { $$ = new UnaryExprAST($1,new VariableExprAST($2,typeTab[$2])); }
+
+operators: CAROT { $$ = '^'; }
+         | AT { $$ = '@'; }
+         | MOD  { $$ = '%'; }
+         | EMARK  { $$ = '!'; }
+         | QMARK  { $$ = '?'; }
+         | AND  { $$ = '&'; }
+         | OR   { $$ = '|'; }
+         | LSBRACE  { $$ = '['; }
+         | RSBRACE  { $$ = ']'; }
+         | DOT    { $$ = '.'; }
+         | COLON  { $$ = ':'; }
+         | SEMICOLON { $$ = ';'; }
 
 numVal: NUMBER { $$ = new IntExprAST($1); }
       | FLOAT { $$ = new DoubleExprAST($1); }
@@ -217,6 +241,7 @@ binOp: numVal
      | binOp GTE numVal { $$ = new BinaryExprAST('G', $1, $3); }
      | binOp NEQUAL numVal { $$ = new BinaryExprAST('N', $1, $3); }
      | binOp COMPEQUAL numVal { $$ = new BinaryExprAST('E', $1, $3); }
+     | binOp operators binOp { $$ = new BinaryExprAST($2,$1,$3); }
 
 
 

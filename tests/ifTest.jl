@@ -17,6 +17,7 @@ func main() -> int {
   }
   else
   {
+    b = 'q'
     putchar(b)
   }
 
@@ -28,6 +29,7 @@ func main() -> int {
   {
     putchar(d)
   }
+  putchar(b)
   1
 }
 

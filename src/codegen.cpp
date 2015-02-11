@@ -17,6 +17,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/User.h"
+#include <boost/lexical_cast.hpp>
 #include <cctype>
 #include <cstdio>
 #include <map>
@@ -245,6 +246,7 @@ Value* BinaryExprAST::Codegen()
   string lty = LHS->getType();
   string rty = RHS->getType();
 
+  cout << "LTY: " << lty << "\tRTY: " << rty << endl;
 
   if(rty == "ints" || lty == "ints" || lty == "doubles" || rty == "doubles" || rty == "chars" || lty == "chars")
   {
@@ -424,23 +426,12 @@ Value* BinaryExprAST::Codegen()
   }
   //Use the getValueID method on the R and L values to check for types/type clashes
   bool isInt = false;
-  cout << L->getValueID() << "\t" << R->getValueID() << endl;
-  if (L->getValueID() == 11 && R->getValueID() == 11)
+  if(lty == rty)
   {
-    isInt = true;
-  } 
-  else if (L->getValueID() == 12 && R->getValueID() == 12)
-  {
-    isInt = false;
-  } 
-  else if (L->getValueID() == 49 && R->getValueID() == 49)
-  {
-    if (dynamic_cast<VariableExprAST*>(LHS)->getType() == "int" && dynamic_cast<VariableExprAST*>(RHS)->getType() == "int")
+    if (lty == "int")
       isInt = true;
-    else if (dynamic_cast<VariableExprAST*>(LHS)->getType() == "double" && dynamic_cast<VariableExprAST*>(RHS)->getType() == "double")
+    else if (lty == "double")
       isInt = false;
-    else
-      goto err;
   } 
   else
   {
@@ -573,7 +564,7 @@ Value* UnaryExprAST::Codegen()
     default: break;
   }
 
-  Function *F = theModule->getFunction(string("unary")+Op);
+  Function *F = theModule->getFunction(string("unary")+boost::lexical_cast<string>((int)Op));
   assert(F && "unary operator not found!");
   Value* ident = R;
   return Builder.CreateCall(F,R,"unop");
@@ -609,7 +600,6 @@ Value* IfExprAST::Codegen()
   if(CondV == 0)
     return 0;
   string ty = Cond->getType();
-  string condVar = dynamic_cast<BinaryExprAST*>(Cond)->getLHSVar();
   if (ty == "double")
     Builder.CreateFCmpONE(CondV, ConstantFP::get(getGlobalContext(), APFloat(0.0)), "ifcond");
   else if (ty == "int")
@@ -636,11 +626,6 @@ Value* IfExprAST::Codegen()
   for (it = Then.begin(); it != Then.end(); it++)
   {
     Tlast = (*it)->Codegen();
-    //if (dynamic_cast<Instruction*>(Tlast)->mayWriteToMemory())
-    //{
-    //  User* u;
-    //  Value* varVal = u->getOperand(0);
-    //}
   }
 
   Builder.CreateBr(MergeBB);

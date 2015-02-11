@@ -142,6 +142,7 @@ class UnaryExprAST : public ExprAST
   VariableExprAST *RHS;
 public:
   UnaryExprAST(char op, VariableExprAST *rhs) : Op(op), RHS(rhs) {}
+  string getLHSVar() { return RHS->getName(); }
   virtual string getType() { return RHS->getType(); }
   virtual Value* Codegen();
 };
@@ -180,9 +181,6 @@ public:
   Function *Codegen();
 };
 
-void createfuncDef(FunctionAST* F);
 void createExtern(PrototypeAST* P);
-void createTLE(FunctionAST* F);
-void createVarDef(VarInitExprAST* V);
-void createBinOp(BinaryExprAST* V);
+void loadModule(char* name);
 #endif

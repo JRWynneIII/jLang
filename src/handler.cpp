@@ -24,17 +24,6 @@ using namespace std;
 using namespace llvm;
 
 
-void createfuncDef(FunctionAST* F)
-{
-  Function* func = F->Codegen();
-  if(!func)
-  {
-    cerr << "\033[31m ERROR: \033[37m Error in reading function " << endl;
-    exit(EXIT_FAILURE);
-  }
-  func->dump();
-}
-
 void createExtern(PrototypeAST* P)
 {
   Function* func = P->Codegen();
@@ -46,24 +35,7 @@ void createExtern(PrototypeAST* P)
   func->dump();
 }
 
-void createVarDef(VarInitExprAST* V)
+void loadModule(char* name)
 {
-  Value* F = V->Codegen();
-  if (!F)
-  {
-    cerr << "\033[31m ERROR: \033[37m Error creating variable " << endl;
-    exit(EXIT_FAILURE);
-  }
-  F->dump();
-}
-
-void createBinOp(BinaryExprAST* V)
-{
-  Value* F = V->Codegen();
-  if (!F)
-  {
-    cerr << "\033[31m ERROR: \033[37m Error creating Binary Operation" << endl;
-    exit(EXIT_FAILURE);
-  }
-  F->dump();
+  
 }
