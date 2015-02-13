@@ -183,7 +183,7 @@ closeBlock: RBRACE
 block: openBlock expressions closeBlock 
      | openBlock closeBlock
 
-forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines; $$ = new ForExprAST($2,$4,$6,new IntExprAST(1),tmp); lines = parseStack.top(); parseStack.pop();  } 
+forLoop: FOR ID EQUAL numVal COMMA numVal block { vector<ExprAST*> tmp = *lines; IntExprAST stp(1); $$ = new ForExprAST($2,$4,$6,&stp,tmp); lines = parseStack.top(); parseStack.pop();  } 
        | FOR ID EQUAL numVal COMMA numVal COMMA numVal block  /*{ $$ = new ForExprAST($2,$4,$6,$8,$9); } */
 
 elseBranch: ELSE block               { tmpLines = *lines; $$ = &tmpLines; lines = parseStack.top(); parseStack.pop(); }

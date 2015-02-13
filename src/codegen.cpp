@@ -101,7 +101,9 @@ Value* ForExprAST::Codegen()
   BasicBlock *PreheaderBB = Builder.GetInsertBlock();
   // Get alloca for the variable in the entry block.
   AllocaInst *Alloca = NamedValues[VarName];
+#ifdef DEBUG
   dumpVars();
+#endif
   Value *StartVal = dynamic_cast<IntExprAST*>(Start)->Codegen();
   if (!StartVal)
     return 0;
@@ -123,13 +125,13 @@ Value* ForExprAST::Codegen()
 
 
   Value *StepVal;
-  if (Step) 
-  {
-    StepVal = Step->Codegen();
-    if (StepVal == 0)
-      return 0;
-  } 
-  else 
+  //if (Step) 
+  //{
+  //  StepVal = Step->Codegen();
+  //  if (StepVal == 0)
+  //    return 0;
+  //} 
+  //else 
     StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
 
 
@@ -198,7 +200,9 @@ Value* VarInitExprAST::Codegen()
     }
     Alloca = CreateEntryBlockAlloca(Name,Type);
     NamedValues[Name] = Alloca;
+#ifdef DEBUG
     dumpVars();
+#endif
     return Builder.CreateStore(Initial,Alloca);
   }
   else
@@ -244,14 +248,11 @@ Value* BinaryExprAST::Codegen()
   string lty = LHS->getType();
   string rty = RHS->getType();
 
-  cout << "LTY: " << lty << "\tRTY: " << rty << endl;
-
   if(rty == "ints" || lty == "ints" || lty == "doubles" || rty == "doubles" || rty == "chars" || lty == "chars")
   {
    
     bool ptrIsLeft = true;
 
-    cout << "LTY:" <<  lty << " RTY: " << rty << " " << endl;
     if(lty != "ints" && lty != "doubles" && lty != "chars")
     {
       ptrIsLeft = false;
@@ -277,8 +278,6 @@ Value* BinaryExprAST::Codegen()
             step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),8));
           else if(lty == "chars")
             step = Builder.CreateMul(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
-          cout << iptr->getType() << endl;
-          cout << step->getType() << endl;
           afterAdd = Builder.CreateAdd(iptr,step,"ptrtmp");
           if(lty == "ints")
             return Builder.CreateIntToPtr(afterAdd,intPtr32);

@@ -58,14 +58,12 @@ void loadModule(const char* name)
   }
   YY_BUFFER_STATE modFile = yy_create_buffer(newBuf,YY_BUF_SIZE);
   yy_switch_to_buffer(modFile);
-  cout << "Loading Module";
   yyparse();
   vector<ExprAST*>::iterator it;
   Value* cur;
   for(it = lines->begin(); it != lines->end(); it++)
   {
     cur = (*it)->Codegen();
-    cout << "CODEGENING MODULE???\n";
     if(!cur)
     {
       cerr << "\033[31m INTERNAL ERROR: \033[37m Error in reading AST in module " << name << endl;

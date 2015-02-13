@@ -1,5 +1,3 @@
-module stdio;
-
 extern func putchar(char c) -> int;
 
 func unary!(int a) -> int {
