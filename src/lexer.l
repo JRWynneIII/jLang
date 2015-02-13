@@ -8,10 +8,12 @@
 #include "jlang.tab.hpp"
 #include "tree.h"
 using namespace std;
+YY_BUFFER_STATE getCurBuf() { return YY_CURRENT_BUFFER; }
 int lineNum = 1;
 %}
-NUMBER [0-9]+
 %option noyywrap
+%option header-file="lex.h"
+NUMBER [0-9]+
 %%
 #.*$ {}
 {NUMBER}(\.{NUMBER}|(\.{NUMBER})?[eE][+-]?{NUMBER}) { yylval.doubleVal = atof(yytext); return FLOAT; }

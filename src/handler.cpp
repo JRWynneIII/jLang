@@ -20,6 +20,7 @@
 #include<stdlib.h>
 #include<fstream>
 #include "jlang.tab.hpp"
+#include "lex.h" 
 #include "tree.h"
 using namespace std;
 using namespace llvm;
@@ -37,25 +38,34 @@ void createExtern(PrototypeAST* P)
 }
 
 extern FILE* yyin;
+extern int YY_FLUSH_BUFFER;
 extern vector<ExprAST*>* lines;
+extern YY_BUFFER_STATE getCurBuf();
+extern Module *theModule;
+extern map<string, AllocaInst*> NamedValues;
 
 void loadModule(const char* name)
 {
+  lines->clear();
   string modName(name);
   modName += ".jl";
-  FILE* yytmp = yyin;
-  if(!(yyin = fopen(modName.c_str(),"r")))
+  YY_BUFFER_STATE tmp = getCurBuf();
+  FILE* newBuf;
+  if(!(newBuf = fopen(modName.c_str(),"r")))
   {
     cerr << "\033[31m ERROR: \033[37m Can not read module "<< name << "!" << endl;
     exit(EXIT_FAILURE);
   }
+  YY_BUFFER_STATE modFile = yy_create_buffer(newBuf,YY_BUF_SIZE);
+  yy_switch_to_buffer(modFile);
+  cout << "Loading Module";
   yyparse();
   vector<ExprAST*>::iterator it;
   Value* cur;
   for(it = lines->begin(); it != lines->end(); it++)
   {
     cur = (*it)->Codegen();
-    cout << cur;
+    cout << "CODEGENING MODULE???\n";
     if(!cur)
     {
       cerr << "\033[31m INTERNAL ERROR: \033[37m Error in reading AST in module " << name << endl;
@@ -63,5 +73,6 @@ void loadModule(const char* name)
     }
   }
   lines->clear();
-  yyin = yytmp;
+  NamedValues.clear();
+  yy_switch_to_buffer(tmp);
 }

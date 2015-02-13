@@ -1,10 +1,21 @@
 module stdio;
 
-func zmain() -> int {
+func main() -> int {
   int a = 4
   int b = 0
   char c = 'a'
   char d = 'z'
-  putchar(c)
+  if !b {
+    putchar(c)
+  }
+  else {
+    putchar(d)
+  }
+  if !a {
+    putchar(c)
+  }
+  else {
+    putchar(d)
+  }
   1
 }
