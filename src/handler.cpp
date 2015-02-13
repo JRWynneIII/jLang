@@ -75,4 +75,5 @@ void loadModule(const char* name)
   lines->clear();
   NamedValues.clear();
   yy_switch_to_buffer(tmp);
+  yy_delete_buffer(modFile);
 }

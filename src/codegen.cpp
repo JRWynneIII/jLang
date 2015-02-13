@@ -130,9 +130,7 @@ Value* ForExprAST::Codegen()
       return 0;
   } 
   else 
-  {
     StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
-  }
 
 
   Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());

@@ -5,6 +5,8 @@ func main() -> int {
   int b = 0
   char c = 'a'
   char d = 'z'
+  int i = 0
+  for i=0,10 {
   if !b {
     putchar(c)
   }
@@ -16,6 +18,7 @@ func main() -> int {
   }
   else {
     putchar(d)
+  }
   }
   1
 }

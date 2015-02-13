@@ -1,6 +1,4 @@
-module stdio;
-
-extern func putchar(char b) -> int;
+extern func putchar(char c) -> int;
 
 func main() -> int {
   int i = 0
