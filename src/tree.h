@@ -157,7 +157,7 @@ public:
   virtual Value *Codegen();
 };
 
-class PrototypeAST 
+class PrototypeAST : public ExprAST
 {
   string Name;
   vector<VarInitExprAST*> Args;
@@ -182,5 +182,5 @@ public:
 };
 
 void createExtern(PrototypeAST* P);
-void loadModule(char* name);
+void loadModule(const char* name);
 #endif

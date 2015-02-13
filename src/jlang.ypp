@@ -131,11 +131,11 @@ expressions: expressions expression
            | expression { $$ = $1; }
 
 expression: varDef  { lines->push_back($1); }
+          | modImport { cout << "Loading Module";  loadModule($1); }
           | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | kernelDef 
-          | modImport { loadModule($1); }
           | forLoop { lines->push_back($1); }
-          | extern { createExtern($1); }
+          | extern { lines->push_back($1); }
           | funcCall  { lines->push_back($1); }
           | ifBranch  { lines->push_back($1);}
           | binOp  { lines->push_back($1); }
