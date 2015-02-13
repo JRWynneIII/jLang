@@ -31,7 +31,7 @@ This is an ongoing and very new/alpha project so many features are either buggy 
 
 The currently supported datatypes are `int`,`char`, `string` (which is an array of `char`s, and `double`.  jLang is built on LLVM 3.4. 
 
-Dependancies for jLang include:
+Dependencies for jLang include:
 * LLVM 3.4
 * Boost
 * 32-bit assembler and libraries (`gcc -m32` is used in the compile script)
