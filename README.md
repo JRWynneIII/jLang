@@ -30,3 +30,8 @@ func main() -> int {
 This is an ongoing and very new/alpha project so many features are either buggy or do NOT work! Feel free to open issues or pull requests!
 
 The currently supported datatypes are `int`,`char`, `string` (which is an array of `char`s, and `double`.  jLang is built on LLVM 3.4. 
+
+Dependencies for jLang include:
+* LLVM 3.4
+* Boost
+* 32-bit assembler and libraries (`gcc -m32` is used in the compile script)
