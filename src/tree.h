@@ -44,7 +44,7 @@ class ForExprAST : public ExprAST
   ExprAST *Start, *End, *Step;
   vector<ExprAST*> Body;
 public:
-  ForExprAST(const string &varname, ExprAST *start, ExprAST *end, ExprAST *step, vector<ExprAST*> body) : VarName(varname), Start(start), End(end), Body(body) {}
+  ForExprAST(const string &varname, ExprAST *start, ExprAST *end, ExprAST *step, vector<ExprAST*> body) : VarName(varname), Start(start), Step(step), End(end), Body(body) {}
   virtual string getType() { return typeTab[VarName]; }
   virtual Value* Codegen();
 };

@@ -125,13 +125,13 @@ Value* ForExprAST::Codegen()
 
 
   Value *StepVal;
-  //if (Step) 
-  //{
-  //  StepVal = Step->Codegen();
-  //  if (StepVal == 0)
-  //    return 0;
-  //} 
-  //else 
+  if (Step) 
+  {
+    StepVal = Step->Codegen();
+    if (StepVal == 0)
+      return 0;
+  } 
+  else 
     StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
 
 
