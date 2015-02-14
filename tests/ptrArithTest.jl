@@ -1,6 +1,4 @@
-module stdio;
-
-extern func putchar(char c) -> int;
+import stdio;
 
 func incPtr(int^ a) -> int^ {
   int^ b = a + 1

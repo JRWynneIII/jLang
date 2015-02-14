@@ -1,4 +1,4 @@
-module stdio;
+import stdio;
 
 extern func putchar(char b) -> int;
 

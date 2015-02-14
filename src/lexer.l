@@ -20,7 +20,7 @@ NUMBER [0-9]+
 {NUMBER} { yylval.intVal = atof(yytext); return NUMBER; }
 [\t ] {}
 "return" { return RETURN; }
-"module" { return MODULE; }
+"import" { return IMPORT; }
 "func" { return FUNC; }
 "extern" { return EXTERN; }
 "int" { return INT; }

@@ -1,8 +1,6 @@
-module stdio;
+import stdio;
 
 #This test should fail! Have to catch it before llvm gets it though
-
-extern func putchar(char b) -> int;
 
 func writez() -> int {
   char d = 'z'

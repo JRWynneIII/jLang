@@ -60,7 +60,7 @@ void yyerror(char const *s)
 
 %token NUMBER FLOAT
 %token STRING ID END CHARACTER
-%token FUNC KERNEL EXTERN FOR IF ELSE ELIF MODULE RETURN
+%token FUNC KERNEL EXTERN FOR IF ELSE ELIF IMPORT RETURN
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
 %token EQUAL COMPEQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
@@ -88,7 +88,7 @@ void yyerror(char const *s)
 %type <strVal> DOT
 %type <strVal> EQUAL
 %type <strVal> FUNC
-%type <strVal> MODULE
+%type <strVal> IMPORT 
 %type <strVal> EXTERN
 %type <strVal> KERNEL
 %type <strVal> RARROW
@@ -143,7 +143,7 @@ expression: varDef  { lines->push_back($1); }
           | unaryOp {lines->push_back($1); }
           | ID  { lines->push_back(new VariableExprAST($1,typeTab[$1]));}
 
-modImport: MODULE ID SEMICOLON { $$ = $2; }
+modImport: IMPORT ID SEMICOLON { $$ = $2; }
 
 funcParams: ID { callArgs.push_back(new VariableExprAST($1,typeTab[$1])); }
           | numVal { callArgs.push_back($1); }

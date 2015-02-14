@@ -1,6 +1,5 @@
-module stdio;
+import stdio;
 
-extern func putchar(char b) -> int;
 
 func main() -> int {
   int i = 4
