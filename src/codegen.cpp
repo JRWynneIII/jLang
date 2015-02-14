@@ -46,7 +46,8 @@ void dumpVars()
   cout << "\nDumping vars: \n";
   for(it=NamedValues.begin();it!=NamedValues.end(); it++)
   {
-    cout << it-> first << ": " << it->second << endl;
+    cout << it->first << ": " << it->second;
+    cout << "\tType: " << typeTab[it->first] << endl;
   }
 }
 
@@ -558,8 +559,25 @@ Value* UnaryExprAST::Codegen()
         AllocaInst* allocaPtr = NamedValues[RHS->getName()];
         return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt8Ty(getGlobalContext()),0)); 
       }
+    case '@':
+      {
+        if (typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars")
+        {
+          cout << typeTab[RHS->getName()] << endl;
+#ifdef DEBUG
+          dumpVars();
+#endif
+          cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << RHS->getName() << ") for dereference operator!" << endl;
+          exit(EXIT_FAILURE);
+        }
+        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        Value* derefPtr = Builder.CreateLoad(allocaPtr,"derefPtr");
+        return Builder.CreateLoad(derefPtr,"derefVal");
+
+      }
     default: break;
   }
+
 
   Function *F = theModule->getFunction(string("unary")+boost::lexical_cast<string>((int)Op));
   assert(F && "unary operator not found!");
