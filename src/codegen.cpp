@@ -804,6 +804,7 @@ Function* FunctionAST::Codegen()
   {
     Builder.CreateRet(last);
     verifyFunction(*theFunction);
+    NamedValues.clear();
     return theFunction;
   }
   //If it gets here there's an error! erase the function
