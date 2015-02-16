@@ -29,7 +29,7 @@ using namespace llvm;
 
 extern FILE* yyin;
 extern vector<ExprAST*>* lines;
-extern Module *theModule;
+Module *theModule;
 extern map<string, AllocaInst*> NamedValues;
 extern FunctionPassManager *theFPM;
 

@@ -1,3 +1,4 @@
+#define DEBUG 1
 #include <iostream>
 #include <fstream>
 #include "llvm/Analysis/Passes.h"
@@ -31,187 +32,15 @@ using namespace std;
 using namespace llvm;
 
 extern FILE* yyin;
+extern int lineNum;
 
-Module *theModule;
+extern Module *theModule;
 static IRBuilder<> Builder(getGlobalContext());
-map<string, AllocaInst*> NamedValues;
-FunctionPassManager *theFPM;
-PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0);
-PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);
-PointerType* doublePtr = PointerType::get(Type::getDoubleTy(getGlobalContext()), 0);
-
-void dumpVars()
-{
-  map<string,AllocaInst*>::iterator it;
-  cout << "\nDumping vars: \n";
-  for(it=NamedValues.begin();it!=NamedValues.end(); it++)
-  {
-    cout << it->first << ": " << it->second;
-    cout << "\tType: " << typeTab[it->first] << endl;
-  }
-}
-
-static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
-{
-  if (type == "double")
-    return Builder.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0, VarName.c_str());
-  else if (type == "doubles")
-    return Builder.CreateAlloca(doublePtr, 0, VarName.c_str());
-  else if (type == "int")
-    return Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, VarName.c_str());
-  else if (type == "ints")
-    return Builder.CreateAlloca(intPtr32, 0, VarName.c_str());
-  else if (type == "char")
-    return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
-  else if (type == "chars")
-    return Builder.CreateAlloca(intPtr8, 0, VarName.c_str());
-  return 0;
-}
-
-Value* IntExprAST::Codegen()
-{
-  return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), Val);
-}
-
-Value* DoubleExprAST::Codegen()
-{
-  return ConstantFP::get(Type::getDoubleTy(getGlobalContext()), Val);
-}
-
-Value* CharExprAST::Codegen()
-{
-  return ConstantInt::get(Type::getInt8Ty(getGlobalContext()), Val);
-}
-
-Value* stringExprAST::Codegen()
-{
-  int i = 0;
-  vector<uint8_t> v;
-  while (i<Size)
-  {
-    v.push_back(Val[i]);
-    i++;
-  } 
-  ArrayRef<uint8_t> chars(v);
-  return ConstantDataArray::get(getGlobalContext(), chars);
-}
-
-Value* ForExprAST::Codegen()
-{
-  Function *TheFunction = Builder.GetInsertBlock()->getParent();
-  BasicBlock *PreheaderBB = Builder.GetInsertBlock();
-  // Get alloca for the variable in the entry block.
-  AllocaInst *Alloca = NamedValues[VarName];
-#ifdef DEBUG
-  dumpVars();
-#endif
-  Value *StartVal = dynamic_cast<IntExprAST*>(Start)->Codegen();
-  if (!StartVal)
-    return 0;
-  // Store the value into the alloca.
-  Builder.CreateStore(StartVal, Alloca);
-
-  BasicBlock *LoopBB = BasicBlock::Create(getGlobalContext(), "loop", TheFunction);
-
-  // Insert an explicit fall through from the current block to the LoopBB.
-  Builder.CreateBr(LoopBB);
-  Builder.SetInsertPoint(LoopBB);
-
-  PHINode *Variable = Builder.CreatePHI(Type::getInt32Ty(getGlobalContext()), 2, VarName.c_str());
-  Variable->addIncoming(StartVal, PreheaderBB);
-
-  Value *EndCond = End->Codegen();
-  if (EndCond == 0)
-    return EndCond;
-
-
-  Value *StepVal;
-  if (Step) 
-  {
-    StepVal = Step->Codegen();
-    if (StepVal == 0)
-      return 0;
-  } 
-  else 
-    StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
-
-
-  Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());
-  Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
-  Builder.CreateStore(NextVar, Alloca);
-
-  EndCond = Builder.CreateICmpSLT(CurVar, EndCond, "loopcond");
-  vector<ExprAST*>::iterator it = Body.begin();
-  for(it = Body.begin(); it != Body.end(); it++)
-  {
-    if((*it)->Codegen() == 0)
-      return 0;
-  }
-
-
-  BasicBlock *LoopEnd = Builder.GetInsertBlock();
-  BasicBlock *AfterBB = BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);
-  Builder.CreateCondBr(EndCond, LoopBB, AfterBB);
-  Builder.SetInsertPoint(AfterBB);
-  Variable->addIncoming(NextVar,LoopEnd);
-
-  return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
-}
-
-Value* VariableExprAST::Codegen()
-{
-  //does var exist?
-  Value* V = NamedValues[Name];
-  if (V == 0)
-  {
-    cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
-    exit(EXIT_FAILURE);
-  }
-  return Builder.CreateLoad(V, Name);
-}
-
-Value* VarInitExprAST::Codegen()
-{
-  if (NamedValues.find(Name) == NamedValues.end())
-  {
-    AllocaInst* Alloca;
-    vector<AllocaInst* > oldBindings;
-
-    Function* F = Builder.GetInsertBlock()->getParent();
-
-    Value* Initial;
-    if(Initd) //if initialized
-      Initial = Initd->Codegen();
-    else
-    {
-      if (Type == "double")
-        Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
-      else if (Type == "doubles")
-        Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
-      else if (Type == "int")
-        Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
-      else if (Type == "ints")
-        Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
-      else if (Type == "char")
-        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
-      else if (Type == "chars")
-        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
-      else if (Type == "string")
-        Initial = ConstantDataArray::getString(getGlobalContext(), "");
-    }
-    Alloca = CreateEntryBlockAlloca(Name,Type);
-    NamedValues[Name] = Alloca;
-#ifdef DEBUG
-    dumpVars();
-#endif
-    return Builder.CreateStore(Initial,Alloca);
-  }
-  else
-  {
-    cerr << "\033[31m ERROR: \033[37m Variable already exists: " << Name << endl;
-    exit(EXIT_FAILURE);
-  }
-}
+extern map<string, AllocaInst*> NamedValues;
+extern PointerType* intPtr32;
+extern PointerType* intPtr8;
+extern PointerType* doublePtr;
+extern void dumpVars();
 
 Value* BinaryExprAST::Codegen()
 {
@@ -220,6 +49,9 @@ Value* BinaryExprAST::Codegen()
     VariableExprAST* LHSE = dynamic_cast<VariableExprAST*>(LHS);
     if (!LHSE)
     {
+#ifdef DEBUG
+    dumpVars();
+#endif
       cerr << "\033[31m ERROR: \033[37m lvalue must be a variable: " << endl;
       exit(EXIT_FAILURE);
     }
@@ -229,6 +61,9 @@ Value* BinaryExprAST::Codegen()
 
     if(Val == 0)
     {
+#ifdef DEBUG
+    dumpVars();
+#endif
       cerr << "\033[31m ERROR: \033[37m Invalid Value " << endl;
       exit(EXIT_FAILURE);
     }
@@ -236,6 +71,9 @@ Value* BinaryExprAST::Codegen()
     Value* Variable = NamedValues[LHSE->getName()];
     if (!Variable)
     {
+#ifdef DEBUG
+    dumpVars();
+#endif
       cerr << "\033[31m ERROR: \033[37m variable not declared!: " << LHSE->getName() << endl;
       exit(EXIT_FAILURE);
     }
@@ -260,6 +98,9 @@ Value* BinaryExprAST::Codegen()
     }
     if(!ptrIsLeft && (rty != "ints" && rty != "doubles" && rty != "chars"))
     {
+#ifdef DEBUG
+    dumpVars();
+#endif
       cerr << "\033[31m ERROR: \033[37m Binary Operation can not be done!" << endl;
       exit(EXIT_FAILURE);
     }
@@ -434,7 +275,10 @@ Value* BinaryExprAST::Codegen()
   else
   {
 err:
-    cerr << "\033[31m ERROR: \033[37m Types do not match!" << endl;
+#ifdef DEBUG
+    dumpVars();
+#endif
+    cerr << "\033[31m ERROR: "<< lineNum <<": \033[37m Types do not match!" << endl;
     exit(EXIT_FAILURE);
   }
 
@@ -537,6 +381,9 @@ Value* UnaryExprAST::Codegen()
   Value* R = RHS->Codegen();
   if (!R)
   {
+#ifdef DEBUG
+    dumpVars();
+#endif
       cerr << "\033[31m ERROR: \033[37m Invalid rval!: " <<  endl;
       exit(EXIT_FAILURE);
   }
@@ -583,231 +430,4 @@ Value* UnaryExprAST::Codegen()
   assert(F && "unary operator not found!");
   Value* ident = R;
   return Builder.CreateCall(F,R,"unop");
-}
-
-Value* CallExprAST::Codegen()
-{
-  //Look up the name in the global module
-  Function* CalleeF = theModule->getFunction(Callee);
-  if (CalleeF == 0)
-  {
-    cerr << "\033[31m ERROR: \033[37m Unknown Function Reference" << endl;
-    exit(EXIT_FAILURE);
-  }
-  if (CalleeF->arg_size() != Args.size())
-  {
-    cerr << "\033[31m ERROR: \033[37m Incorrect number of arguements" << endl;
-    exit(EXIT_FAILURE);
-  }
-  vector<Value*> ArgsV;
-  for (unsigned i = 0, e = Args.size(); i != e; ++i)
-  {
-    ArgsV.push_back(Args[i]->Codegen());
-    if (ArgsV.back() == 0)
-      return 0;
-  }
-  return Builder.CreateCall(CalleeF,ArgsV,"calltmp");
-}
-
-Value* IfExprAST::Codegen()
-{
-  Value* CondV = Cond->Codegen();
-  if(CondV == 0)
-    return 0;
-  string ty = Cond->getType();
-  if (ty == "double")
-    Builder.CreateFCmpONE(CondV, ConstantFP::get(getGlobalContext(), APFloat(0.0)), "ifcond");
-  else if (ty == "int")
-    Builder.CreateICmpNE(CondV, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0), "ifcond");
-  else
-    return 0;
-  Function* theFunction = Builder.GetInsertBlock()->getParent();
-  BasicBlock* Entry = Builder.GetInsertBlock();
-
-  BasicBlock* ThenBB = BasicBlock::Create(getGlobalContext(), "then", theFunction);
-  BasicBlock* ElseBB = BasicBlock::Create(getGlobalContext(), "else");
-  BasicBlock* MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
-
-  Value* sCond = Builder.CreateSExtOrTrunc(CondV, Type::getInt1Ty(getGlobalContext()));
-  if(hasElse)
-    Builder.CreateCondBr(sCond, ThenBB, ElseBB);
-  else
-    Builder.CreateCondBr(sCond, ThenBB, MergeBB);
-  //Create Then block
-  Builder.SetInsertPoint(ThenBB);
-
-  vector<ExprAST*>::iterator it;
-  Value* Tlast; 
-  for (it = Then.begin(); it != Then.end(); it++)
-  {
-    Tlast = (*it)->Codegen();
-  }
-
-  Builder.CreateBr(MergeBB);
-  ThenBB = Builder.GetInsertBlock();
-  //Create Else Block
-  Value* Elast;
-  if(hasElse) 
-  {
-    theFunction->getBasicBlockList().push_back(ElseBB);
-    Builder.SetInsertPoint(ElseBB);
-
-    vector<ExprAST*>::iterator it;
-    for (it = Else.begin(); it != Else.end(); it++)
-      Elast = (*it)->Codegen();
-
-    Builder.CreateBr(MergeBB);
-    ElseBB = Builder.GetInsertBlock();
-  }
-
-  //Set up merge block
-  theFunction->getBasicBlockList().push_back(MergeBB);
-  Builder.SetInsertPoint(MergeBB);
-
-  return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
-}
-
-static Type *typeOf(VarInitExprAST* type) 
-{
-  if (type->getType() == "int") 
-  {
-    return Type::getInt32Ty(getGlobalContext());
-  }
-  else if (type->getType() == "double") 
-  {
-    return Type::getDoubleTy(getGlobalContext());
-  }
-  else if (type->getType() == "char") 
-  {
-    return Type::getInt8Ty(getGlobalContext());
-  }
-  else if (type->getType() == "chars") 
-  {
-    return intPtr8;
-  }
-  else if (type->getType() == "ints") 
-  {
-    return intPtr32;
-  }
-  else if (type->getType() == "doubles") 
-  {
-    return doublePtr;
-  }
-  return 0;
-}
-
-typedef std::vector<VarInitExprAST*> VariableList;
-
-Function* PrototypeAST::Codegen()
-{
-  vector<Type*> argTypes;
-  VariableList::const_iterator it;
-  for (it = Args.begin(); it != Args.end(); it++)
-  {
-    argTypes.push_back(typeOf((*it)));
-  }
-  FunctionType* FT;
-  Function* F;
-  if (Args.empty())
-  {
-    if (Ty == "double")
-      FT = FunctionType::get(Builder.getDoubleTy(),false);
-    else if (Ty == "doubles")
-      FT = FunctionType::get(doublePtr,false);
-    else if (Ty == "int")
-      FT = FunctionType::get(Builder.getInt32Ty(),false);
-    else if (Ty == "ints")
-      FT = FunctionType::get(intPtr32, false);
-    else if (Ty == "char")
-      FT = FunctionType::get(Builder.getInt8Ty(),false);
-    else if (Ty == "chars")
-      FT = FunctionType::get(intPtr8, false);
-  }
-  else 
-  {
-    if (Ty == "double")
-      FT = FunctionType::get(Builder.getDoubleTy(),makeArrayRef(argTypes),false);
-    else if (Ty == "doubles")
-      FT = FunctionType::get(doublePtr,makeArrayRef(argTypes),false);
-    else if (Ty == "int")
-      FT = FunctionType::get(Builder.getInt32Ty(),makeArrayRef(argTypes),false);
-    else if (Ty == "ints")
-      FT = FunctionType::get(intPtr32,makeArrayRef(argTypes),false);
-    else if (Ty == "char")
-      FT = FunctionType::get(Builder.getInt8Ty(),makeArrayRef(argTypes),false);
-    else if (Ty == "chars")
-      FT = FunctionType::get(intPtr8,makeArrayRef(argTypes),false);
-  }
-  F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);
-  if(F->getName() != Name)
-  {
-    F->eraseFromParent();
-    F = theModule->getFunction(Name);
-
-    if(!F->empty())
-    {
-      cerr << "\033[31m ERROR: \033[37m Redfinition of Function" << endl;
-      exit(EXIT_FAILURE);
-    }
-
-    if(F->arg_size() != Args.size())
-    {
-      cerr << "\033[31m ERROR: \033[37m Incorrect number of arguments for Function" << endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  unsigned Idx = 0;
-  if (!Args.empty())
-  {
-    for (Function::arg_iterator AI = F->arg_begin(); Idx != Args.size(); ++AI, ++Idx)
-    {
-      AI->setName(Args[Idx]->getName());
-    }
-  }
-  return F;
-}
-
-void PrototypeAST::CreateArgumentAllocas(Function *F)
-{
-  Function::arg_iterator AI = F->arg_begin();
-  for (unsigned Idx = 0, e = Args.size(); Idx != e; ++Idx, ++AI)
-  {
-    AllocaInst* Alloca = CreateEntryBlockAlloca(Args[Idx]->getName(), Args[Idx]->getType());
-    Builder.CreateStore(AI,Alloca);
-    NamedValues[Args[Idx]->getName()] = Alloca;
-    typeTab[Args[Idx]->getName()] = Args[Idx]->getType();
-  }
-}
-
-Function* FunctionAST::Codegen()
-{
-  Function* theFunction = Proto->Codegen();
-  if(theFunction == 0)
-    return 0;
-
-  BasicBlock* BB = BasicBlock::Create(getGlobalContext(),"entry",theFunction);
-  Builder.SetInsertPoint(BB);
-
-  Proto->CreateArgumentAllocas(theFunction);
-
-  vector<ExprAST*>::iterator it = Body.begin();
-  Value* last;
-  for(it = Body.begin(); it != Body.end(); ++it)
-  {
-    last = (*it)->Codegen();
-    if (!last)
-      break;
-  }
-  
-  if(last)
-  {
-    Builder.CreateRet(last);
-    verifyFunction(*theFunction);
-    NamedValues.clear();
-    return theFunction;
-  }
-  //If it gets here there's an error! erase the function
-  theFunction->eraseFromParent();
-  return 0;
 }

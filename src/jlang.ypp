@@ -132,7 +132,7 @@ expressions: expressions expression
            | expression { $$ = $1; }
 
 expression: varDef  { lines->push_back($1); }
-          | modImport { loadModule($1); }
+          | modImport { loadModule($1); lineNum=0; }
           | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | kernelDef 
           | forLoop { lines->push_back($1); }
@@ -146,10 +146,13 @@ expression: varDef  { lines->push_back($1); }
 
 modImport: IMPORT ID SEMICOLON { $$ = $2; }
 
-funcParams: ID { callArgs.push_back(new VariableExprAST($1,typeTab[$1])); }
+funcParam: ID { callArgs.push_back(new VariableExprAST($1,typeTab[$1])); }
           | numVal { callArgs.push_back($1); }
           | chara 
           | binOp { callArgs.push_back($1); }
+        
+funcParams: funcParams COMMA funcParam
+          | funcParam
 
 chara: CHARACTER { $$ = new CharExprAST($1); }
 
