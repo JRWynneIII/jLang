@@ -35,7 +35,7 @@ extern FILE* yyin;
 extern int lineNum;
 
 extern Module *theModule;
-static IRBuilder<> Builder(getGlobalContext());
+extern IRBuilder<> Builder;
 map<string, AllocaInst*> NamedValues;
 PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0);
 PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);

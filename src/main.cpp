@@ -27,6 +27,7 @@
 using namespace std;
 using namespace llvm;
 
+IRBuilder<> Builder(getGlobalContext());
 extern FILE* yyin;
 extern vector<ExprAST*>* lines;
 Module *theModule;
