@@ -44,6 +44,7 @@ void yyerror(char const *s)
   double doubleVal;
   const char* strVal;
   VarInitExprAST* varInit;
+  TypeCastExprAST* tc;
   FunctionAST* fdef;
   PrototypeAST* proto;
   CallExprAST* functionCall;
@@ -122,6 +123,7 @@ void yyerror(char const *s)
 %type <charVal> operators
 %type <strVal> funcName
 %type <strVal> modImport
+%type <tc> cast
 
 %start program
 
@@ -234,6 +236,9 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
       | MINUS FLOAT { double tmp = 0-$2; $$ = new DoubleExprAST(tmp); }
       | chara { $$ = $1; }
       | ID { $$ = new VariableExprAST($1,typeTab[$1]); }
+      | cast { $$ = $1; }
+
+cast: LPAREN dataType RPAREN ID { $$ = new TypeCastExprAST($4,$2); }
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }

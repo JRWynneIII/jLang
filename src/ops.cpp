@@ -274,12 +274,19 @@ Value* BinaryExprAST::Codegen()
   } 
   else
   {
+    if (lty == "int" && rty == "double")
+      L = Builder.CreateSIToFP(L,Type::getDoubleTy(getGlobalContext()));
+    else if (lty == "double" && rty == "int")
+      R = Builder.CreateSIToFP(R,Type::getDoubleTy(getGlobalContext()));
+    else
+    {
 err:
 #ifdef DEBUG
-    dumpVars();
+      dumpVars();
 #endif
-    cerr << "\033[31m ERROR: "<< lineNum <<": \033[37m Types do not match!" << endl;
-    exit(EXIT_FAILURE);
+      cerr << "\033[31m ERROR: "<< lineNum <<": \033[37m Types do not match!" << endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   
@@ -410,7 +417,6 @@ Value* UnaryExprAST::Codegen()
       {
         if (typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars")
         {
-          cout << typeTab[RHS->getName()] << endl;
 #ifdef DEBUG
           dumpVars();
 #endif
@@ -430,4 +436,23 @@ Value* UnaryExprAST::Codegen()
   assert(F && "unary operator not found!");
   Value* ident = R;
   return Builder.CreateCall(F,R,"unop");
+}
+
+Value* TypeCastExprAST::Codegen() 
+{
+  if (toType == typeTab[varName])
+    return 0;
+  else if (toType == "int" && typeTab[varName] == "double")
+    return Builder.CreateFPToSI(NamedValues[varName],Type::getInt32Ty(getGlobalContext()));
+  else if (toType == "double" && typeTab[varName] == "int")
+    return Builder.CreateSIToFP(NamedValues[varName],Type::getDoubleTy(getGlobalContext()));
+  else
+  {
+#ifdef DEBUG
+      dumpVars();
+#endif
+      cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << toType << ") for casting operation!" << endl;
+      exit(EXIT_FAILURE);
+
+  }
 }

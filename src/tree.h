@@ -122,6 +122,17 @@ public:
   virtual Value* Codegen();
 };
 
+class TypeCastExprAST : public ExprAST
+{
+  string toType;
+  string varName;
+public:
+  TypeCastExprAST(string name, string ty) : varName(name), toType(ty) {}
+  virtual string getType() { return toType; }
+  string getName() { return varName; }
+  virtual Value* Codegen();
+};
+
 class BinaryExprAST : public ExprAST 
 {
   char Op;
