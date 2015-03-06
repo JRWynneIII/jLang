@@ -77,7 +77,17 @@ Value* BinaryExprAST::Codegen()
       cerr << "\033[31m ERROR: \033[37m variable not declared!: " << LHSE->getName() << endl;
       exit(EXIT_FAILURE);
     }
-    return Builder.CreateStore(Val,Variable);
+    Value *L = LHS->Codegen();
+    Value *R = RHS->Codegen();
+    if (L == 0 || R == 0) return 0;
+
+    string lty = LHS->getType();
+    string rty = RHS->getType();
+    if (lty == "int" && rty == "double")
+      R = Builder.CreateFPToSI(R,Type::getInt32Ty(getGlobalContext()));
+    else if (lty == "double" && rty == "int")
+      R = Builder.CreateSIToFP(R,Type::getDoubleTy(getGlobalContext()));
+    return Builder.CreateStore(R,Variable);
   }
 
   Value *L = LHS->Codegen();
@@ -440,6 +450,8 @@ Value* UnaryExprAST::Codegen()
 
 Value* TypeCastExprAST::Codegen() 
 {
+  cout << "\t" << toType << endl;
+  cout << "\t" << typeTab[varName] << endl;
   if (toType == typeTab[varName])
     return 0;
   else if (toType == "int" && typeTab[varName] == "double")
