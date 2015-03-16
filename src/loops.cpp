@@ -123,6 +123,8 @@ Value* IfExprAST::Codegen()
   BasicBlock* ElseBB = BasicBlock::Create(getGlobalContext(), "else");
   BasicBlock* MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
 
+  if (ty == "double")
+    CondV = Builder.CreateFPToSI(CondV, Type::getInt32Ty(getGlobalContext()));
   Value* sCond = Builder.CreateSExtOrTrunc(CondV, Type::getInt1Ty(getGlobalContext()));
   if(hasElse)
     Builder.CreateCondBr(sCond, ThenBB, ElseBB);

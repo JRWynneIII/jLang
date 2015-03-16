@@ -39,6 +39,7 @@ func main() -> int {
   int tmp
   int xsquare
   int ysquare
+  int t
   double escaperadius=2.0
   double ersquare = escaperadius*escaperadius
   for iy=0,ymax {
@@ -51,19 +52,23 @@ func main() -> int {
       y=0
       xsquare=x*x
       ysquare=y*y
-      for iter=0,maxiter {
-        if (xsquare+ysquare)<ersquare {
+      t = xsquare+ysquare
+      double xplusy
+      xplusy = t
+      for iter = 0,maxiter {
+        if xplusy < ersquare {
           y = 2.0*x*y+cy
-          x=xsquare-ysquare+cx
+          x=xsquare-ysquare
+          x = cx + x
           xsquare=x*x
           ysquare=y*y
         }
       }
       if iter == maxiter {
-        printdensity(1)       
+        printDensity(1)       
       }
       else {
-        printdensity(0)
+        printDensity(0)
       }
     }
   }

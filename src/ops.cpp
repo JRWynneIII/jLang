@@ -323,9 +323,10 @@ err:
       else
         return Builder.CreateUDiv(L, R, "addtmp");
     case '<':
+      cout << isInt << endl;
       if(!isInt) {
         L = Builder.CreateFCmpULT(L, R, "cmptmp");
-        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+        return Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
       }
       else 
       {
@@ -335,7 +336,7 @@ err:
     case '>':
       if(!isInt) {
         L = Builder.CreateFCmpUGT(L, R, "cmptmp");
-        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+        return Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
       }
       else 
       {
@@ -345,7 +346,7 @@ err:
     case 'G':
       if(!isInt) {
         L = Builder.CreateFCmpUGE(L, R, "cmptmp");
-        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+        return Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
       }
       else 
       {
@@ -355,7 +356,7 @@ err:
     case 'L':
       if(!isInt) {
         L = Builder.CreateFCmpULE(L, R, "cmptmp");
-        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+        return Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
       }
       else 
       {
@@ -365,7 +366,7 @@ err:
     case 'N':
       if(!isInt) {
         L = Builder.CreateFCmpUNE(L, R, "cmptmp");
-        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+        return Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
       }
       else 
       {
@@ -375,7 +376,7 @@ err:
     case 'E':
       if(!isInt) {
         L = Builder.CreateFCmpUEQ(L, R, "cmptmp");
-        return Builder.CreateUIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
+        return Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
       }
       else 
       {
