@@ -2,11 +2,10 @@ import stdio;
 
 func main() -> int {
   int a = 4
-  double b = 5.4
-  char n = 'a'
+  double b = 3.4
   double c  
   c = a
-  c = c+b
-  c = c + (double)a
+  a = c
+  c = b + (double)a
   1
 }

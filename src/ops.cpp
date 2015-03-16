@@ -448,23 +448,23 @@ Value* UnaryExprAST::Codegen()
   return Builder.CreateCall(F,R,"unop");
 }
 
-Value* TypeCastExprAST::Codegen() 
-{
-  cout << "\t" << toType << endl;
-  cout << "\t" << typeTab[varName] << endl;
-  if (toType == typeTab[varName])
-    return 0;
-  else if (toType == "int" && typeTab[varName] == "double")
-    return Builder.CreateFPToSI(NamedValues[varName],Type::getInt32Ty(getGlobalContext()));
-  else if (toType == "double" && typeTab[varName] == "int")
-    return Builder.CreateSIToFP(NamedValues[varName],Type::getDoubleTy(getGlobalContext()));
-  else
-  {
-#ifdef DEBUG
-      dumpVars();
-#endif
-      cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << toType << ") for casting operation!" << endl;
-      exit(EXIT_FAILURE);
-
-  }
-}
+//Value* TypeCastExprAST::Codegen() 
+//{
+//  cout << "\t" << toType << endl;
+//  cout << "\t" << typeTab[varName] << endl;
+//  if (toType == typeTab[varName])
+//    return 0;
+//  else if (toType == "int" && typeTab[varName] == "double")
+//    return Builder.CreateFPToSI(NamedValues[varName],Type::getInt32Ty(getGlobalContext()));
+//  else if (toType == "double" && typeTab[varName] == "int")
+//    return Builder.CreateSIToFP(NamedValues[varName],Type::getDoubleTy(getGlobalContext()));
+//  else
+//  {
+//#ifdef DEBUG
+//      dumpVars();
+//#endif
+//      cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << toType << ") for casting operation!" << endl;
+//      exit(EXIT_FAILURE);
+//
+//  }
+//}

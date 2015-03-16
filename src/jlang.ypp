@@ -236,9 +236,9 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
       | MINUS FLOAT { double tmp = 0-$2; $$ = new DoubleExprAST(tmp); }
       | chara { $$ = $1; }
       | ID { $$ = new VariableExprAST($1,typeTab[$1]); }
-      | cast { $$ = $1; }
+      /*| cast { $$ = $1; }
 
-cast: LPAREN dataType RPAREN ID { $$ = new TypeCastExprAST($4,$2); }
+cast: LPAREN dataType RPAREN ID { /*$$ = new TypeCastExprAST($4,$2); }*/
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }
