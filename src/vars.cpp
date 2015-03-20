@@ -66,6 +66,8 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
     return Builder.CreateAlloca(Type::getInt8Ty(getGlobalContext()), 0, VarName.c_str());
   else if (type == "chars")
     return Builder.CreateAlloca(intPtr8, 0, VarName.c_str());
+  else if (type == "string")
+    return Builder.CreateAlloca(intPtr8, 0 , VarName.c_str());
   return 0;
 }
 
@@ -86,15 +88,8 @@ Value* CharExprAST::Codegen()
 
 Value* stringExprAST::Codegen()
 {
-  int i = 0;
-  vector<uint8_t> v;
-  while (i<Size)
-  {
-    v.push_back(Val[i]);
-    i++;
-  } 
-  ArrayRef<uint8_t> chars(v);
-  return ConstantDataArray::get(getGlobalContext(), chars);
+  StringRef str(Val);
+  return Builder.CreateGlobalStringPtr(str);
 }
 
 
@@ -140,7 +135,7 @@ Value* VarInitExprAST::Codegen()
       else if (Type == "chars")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
       else if (Type == "string")
-        Initial = ConstantDataArray::getString(getGlobalContext(), "");
+        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
     }
     Alloca = CreateEntryBlockAlloca(Name,Type);
     NamedValues[Name] = Alloca;

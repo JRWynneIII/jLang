@@ -85,7 +85,7 @@ class stringExprAST : public ExprAST
 public:
   const char* Val;
   double Size;
-  stringExprAST(const char* val, double size) : Val(val), Size(size) {}
+  stringExprAST(const char* val, double size, bool isPString = false) : Val(val), Size(size) {}
   virtual string getType() { return "string"; }
   virtual Value* Codegen();
 };

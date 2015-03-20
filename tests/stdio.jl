@@ -1,13 +1,14 @@
 extern func putchar(char putcharCharacter) -> int;
 
-extern func itoa(int val, char^ str, int base) -> char^;
+#extern func itoa(int val, char^ str, int base) -> char^;
 
 extern func sprintf(char^ str, char^ format, int i) -> int;
 
-#func itoa(int val, char^ str, int base) -> char^ {
-#  sprintf(str, "%d", val)
-#  str
-#}
+func itoa(int val, char^ str, int base) -> char^ {
+  string format = "%d"
+  sprintf(str, format, val)
+  str
+}
 
 func unary!(int a) -> int {
   int ret = 0
