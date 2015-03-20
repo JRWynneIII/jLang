@@ -99,6 +99,7 @@ void yyerror(char const *s)
 %type <strVal> LPAREN
 %type <strVal> RPAREN
 %type <strVal> RBRACE
+%type <strVal> EMARK
 %type <strVal> ID
 %type <charVal> CHARACTER
 
@@ -213,12 +214,12 @@ funcProto: FUNC funcName LPAREN paramDefs RPAREN RARROW dataType { $$ = new Prot
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
        | operators ID { $$ = new UnaryExprAST($1,new VariableExprAST($2,typeTab[$2])); }
+       | EMARK binOp { $$ = new UnaryExprAST('!', $2); }
       
 
 operators: CAROT { $$ = '^'; }
          | AT { $$ = '@'; }
          | MOD  { $$ = '%'; }
-         | EMARK  { $$ = '!'; }
          | QMARK  { $$ = '?'; }
          | AND  { $$ = '&'; }
          | OR   { $$ = '|'; }

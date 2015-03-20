@@ -150,10 +150,10 @@ public:
 class UnaryExprAST : public ExprAST
 {
   char Op;
-  VariableExprAST *RHS;
+  ExprAST *RHS;
 public:
-  UnaryExprAST(char op, VariableExprAST *rhs) : Op(op), RHS(rhs) {}
-  string getLHSVar() { return RHS->getName(); }
+  UnaryExprAST(char op, ExprAST *rhs) : Op(op), RHS(rhs) {}
+  string getLHSVar() { return dynamic_cast<VariableExprAST*>(RHS)->getName(); }
   virtual string getType() { return RHS->getType(); }
   virtual Value* Codegen();
 };

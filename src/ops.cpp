@@ -409,44 +409,49 @@ Value* UnaryExprAST::Codegen()
   switch(Op)
   {
     case '^':
-      if (typeTab[RHS->getName()] == "int")
+      if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "int")
       {
-        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
         return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0)); 
       }
-      else if (typeTab[RHS->getName()] == "double")
+      else if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "double")
       {
-        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
         return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getDoubleTy(getGlobalContext()),0.0)); 
       }
-      else if (typeTab[RHS->getName()] == "char")
+      else if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "char")
       {
-        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
         return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt8Ty(getGlobalContext()),0)); 
       }
     case '@':
       {
-        if (typeTab[RHS->getName()] != "string" && typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars")
+        if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "string" && typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "ints" && typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "doubles" && typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "chars")
         {
 #ifdef DEBUG
           dumpVars();
 #endif
-          cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << RHS->getName() << ") for dereference operator!" << endl;
+          cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << dynamic_cast<VariableExprAST*>(RHS)->getName() << ") for dereference operator!" << endl;
           exit(EXIT_FAILURE);
         }
-        AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
         Value* derefPtr = Builder.CreateLoad(allocaPtr,"derefPtr");
         return Builder.CreateLoad(derefPtr,"derefVal");
 
       }
+    case '!':
+      {
+        Value* R = RHS->Codegen();
+        if (RHS->getType() == "int")
+          return Builder.CreateICmpNE(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0));
+        else if (RHS->getType() == "double")
+          return Builder.CreateFCmpONE(R,ConstantInt::get(Type::getDoubleTy(getGlobalContext()),0));
+        else
+          return 0;
+      }
     default: break;
   }
-
-
-  Function *F = theModule->getFunction(string("unary")+boost::lexical_cast<string>((int)Op));
-  assert(F && "unary operator not found!");
-  Value* ident = R;
-  return Builder.CreateCall(F,R,"unop");
+  return 0;
 }
 
 //Value* TypeCastExprAST::Codegen() 

@@ -10,18 +10,6 @@ func itoa(int val, char^ str, int base) -> char^ {
   str
 }
 
-func unary!(int a) -> int {
-  int ret = 0
-  
-  if a > 0 {
-    ret = 0
-  }
-  else {
-    ret = 1
-  }
-  ret
-}
-
 func binary|(int lhs, int rhs) -> int {
   int ret = 0
   if lhs > 0 {
