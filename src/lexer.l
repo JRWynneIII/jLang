@@ -66,7 +66,21 @@ NUMBER [0-9]+
 '*' { yylval.charVal = '*'; return CHARACTER; }
 \'[a-zA-Z]\' { yylval.charVal = yytext[1]; return CHARACTER; }
 [a-z_][a-zA-Z0-9_]* { yylval.strVal = strdup(yytext); return ID; }
-\"([^"]|\\.)*\" { yylval.strVal = strdup(yytext); return STRING; }
+\"([^"]|\\.)*\" { 
+  int len = strlen(yytext);
+  char st[len-2];
+  int counter = 0;
+  for (int i = 0; i<len; i++)
+  {
+    if (yytext[i] != '"')
+    { 
+      st[counter] = yytext[i];
+      counter++;
+    }
+  }
+  yylval.strVal = strdup(st);
+  return STRING; 
+}
 
 \n {lineNum++; /*return END;*/ }
 . { fprintf(stderr, "Unknown token '%s'\n", yytext); }

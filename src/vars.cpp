@@ -1,4 +1,5 @@
 #define DEBUG 1
+#include <string.h>
 #include <iostream>
 #include <fstream>
 #include "llvm/Analysis/Passes.h"
@@ -88,6 +89,9 @@ Value* CharExprAST::Codegen()
 
 Value* stringExprAST::Codegen()
 {
+  //int len = strlen(Val);
+  //Val[len+1] = '\0';
+  strcat((char*)Val, "\0");
   StringRef str(Val);
   return Builder.CreateGlobalStringPtr(str);
 }

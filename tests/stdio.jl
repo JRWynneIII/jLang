@@ -2,7 +2,7 @@ extern func putchar(char putcharCharacter) -> int;
 
 #extern func itoa(int val, char^ str, int base) -> char^;
 
-extern func sprintf(char^ str, char^ format, int i) -> int;
+extern func sprintf(char^ str, string format, int i) -> int;
 
 func itoa(int val, char^ str, int base) -> char^ {
   string format = "%d"

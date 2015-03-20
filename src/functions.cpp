@@ -117,6 +117,10 @@ static Type *typeOf(VarInitExprAST* type)
   {
     return doublePtr;
   }
+  else if (type->getType() == "string")
+  {
+    return intPtr8;
+  }
   return 0;
 }
 
@@ -146,6 +150,8 @@ Function* PrototypeAST::Codegen()
       FT = FunctionType::get(Builder.getInt8Ty(),false);
     else if (Ty == "chars")
       FT = FunctionType::get(intPtr8, false);
+    else if (Ty == "string")
+      FT = FunctionType::get(intPtr8, false);
   }
   else 
   {
@@ -160,6 +166,8 @@ Function* PrototypeAST::Codegen()
     else if (Ty == "char")
       FT = FunctionType::get(Builder.getInt8Ty(),makeArrayRef(argTypes),false);
     else if (Ty == "chars")
+      FT = FunctionType::get(intPtr8,makeArrayRef(argTypes),false);
+    else if (Ty == "string")
       FT = FunctionType::get(intPtr8,makeArrayRef(argTypes),false);
   }
   F = Function::Create(FT, Function::ExternalLinkage, Name, theModule);

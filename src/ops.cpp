@@ -426,7 +426,7 @@ Value* UnaryExprAST::Codegen()
       }
     case '@':
       {
-        if (typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars")
+        if (typeTab[RHS->getName()] != "string" && typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars")
         {
 #ifdef DEBUG
           dumpVars();
