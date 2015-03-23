@@ -443,9 +443,15 @@ Value* UnaryExprAST::Codegen()
       {
         Value* R = RHS->Codegen();
         if (RHS->getType() == "int")
-          return Builder.CreateICmpNE(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0));
+        {
+          Value* cmp =  Builder.CreateICmpEQ(R,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0));
+          return Builder.CreateSExt(cmp, Type::getInt32Ty(getGlobalContext()));
+        }
         else if (RHS->getType() == "double")
-          return Builder.CreateFCmpONE(R,ConstantInt::get(Type::getDoubleTy(getGlobalContext()),0));
+        {
+          Value* cmp = Builder.CreateFCmpOEQ(R,ConstantInt::get(Type::getDoubleTy(getGlobalContext()),0));
+          return Builder.CreateSIToFP(cmp,Type::getDoubleTy(getGlobalContext()));
+        }
         else
           return 0;
       }
