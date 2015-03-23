@@ -68,9 +68,9 @@ NUMBER [0-9]+
 [a-z_][a-zA-Z0-9_]* { yylval.strVal = strdup(yytext); return ID; }
 \"([^"]|\\.)*\" { 
   int len = strlen(yytext);
-  char st[len-2];
+  char st[len+1];
   int counter = 0;
-  for (int i = 0; i<len; i++)
+  for (int i = 0; i<=len; i++)
   {
     if (yytext[i] != '"')
     { 
@@ -78,6 +78,7 @@ NUMBER [0-9]+
       counter++;
     }
   }
+  strcat(st,"\0");
   yylval.strVal = strdup(st);
   return STRING; 
 }

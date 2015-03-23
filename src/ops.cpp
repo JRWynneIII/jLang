@@ -385,13 +385,6 @@ err:
       }
     default: break;
   }
-  
-  //if theres a custom binary op defined, get it.
-  Function *F = theModule->getFunction(string("binary")+Op);
-  assert(F && "binary operator not found!");
-  
-  Value *Ops[] = { L, R };
-  return Builder.CreateCall(F, Ops, "binop"); 
 }
 
 Value* UnaryExprAST::Codegen()

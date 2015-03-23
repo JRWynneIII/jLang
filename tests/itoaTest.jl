@@ -2,8 +2,8 @@ import stdio;
 
 func main() -> int
 {
+  string test = "HERE"
   string ch = "hello"
-  char^ c
-  c = itoa(32,ch,10)
+  itoa(32,ch)
   1
 }
