@@ -1,4 +1,3 @@
-#define DEBUG 1
 #include <iostream>
 #include <fstream>
 #include "llvm/Analysis/Passes.h"

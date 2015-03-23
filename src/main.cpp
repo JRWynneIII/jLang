@@ -66,7 +66,9 @@ int main(int argc, char*argv[])
   opt.add(createGVNPass());
   opt.add(createCFGSimplificationPass());
   opt.doInitialization();
+#ifdef DEBUG
   theModule->dump();
+#endif
 
   string Errors, ErrorCatch;
   raw_fd_ostream bcFile("t.ll", Errors, sys::fs::F_Binary);

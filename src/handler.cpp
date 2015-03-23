@@ -34,7 +34,9 @@ void createExtern(PrototypeAST* P)
     cerr << "\033[31m ERROR: \033[37m Error in declaring extern " << endl;
     exit(EXIT_FAILURE);
   }
+#ifdef DEBUG
   func->dump();
+#endif
 }
 
 extern FILE* yyin;

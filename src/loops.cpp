@@ -1,4 +1,3 @@
-#define DEBUG 1
 #include <iostream>
 #include <fstream>
 #include "llvm/Analysis/Passes.h"
@@ -51,7 +50,13 @@ Value* ForExprAST::Codegen()
 #ifdef DEBUG
   dumpVars();
 #endif
-  Value *StartVal = dynamic_cast<IntExprAST*>(Start)->Codegen();
+  string Ty = Start->getType();
+  Value *StartVal;
+  if (Ty == "double")
+    StartVal = dynamic_cast<DoubleExprAST*>(Start)->Codegen();
+  else
+    StartVal = dynamic_cast<IntExprAST*>(Start)->Codegen();
+
   if (!StartVal)
     return 0;
   // Store the value into the alloca.
@@ -62,8 +67,12 @@ Value* ForExprAST::Codegen()
   // Insert an explicit fall through from the current block to the LoopBB.
   Builder.CreateBr(LoopBB);
   Builder.SetInsertPoint(LoopBB);
+  PHINode *Variable;
 
-  PHINode *Variable = Builder.CreatePHI(Type::getInt32Ty(getGlobalContext()), 2, VarName.c_str());
+  if (Ty == "double")
+    Variable = Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()), 2, VarName.c_str());
+  else
+    Variable = Builder.CreatePHI(Type::getInt32Ty(getGlobalContext()), 2, VarName.c_str());
   Variable->addIncoming(StartVal, PreheaderBB);
 
   Value *EndCond = End->Codegen();
@@ -78,12 +87,21 @@ Value* ForExprAST::Codegen()
     if (StepVal == 0)
       return 0;
   } 
-  else 
+  else
+  {
+   if (Ty == "double") 
+    StepVal = ConstantInt::get(Type::getDoubleTy(getGlobalContext()), 1.0);
+   else
     StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
+  }
 
 
   Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());
-  Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
+  Value *NextVar;
+  if (Ty == "double")
+    NextVar = Builder.CreateFAdd(CurVar, StepVal, "nextvar");
+  else
+    NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
   Builder.CreateStore(NextVar, Alloca);
 
   EndCond = Builder.CreateICmpSLT(CurVar, EndCond, "loopcond");
@@ -101,7 +119,7 @@ Value* ForExprAST::Codegen()
   Builder.SetInsertPoint(AfterBB);
   Variable->addIncoming(NextVar,LoopEnd);
 
-  return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
+  return Constant::getNullValue(Type::getInt32Ty(getGlobalContext()));
 }
 
 Value* IfExprAST::Codegen()

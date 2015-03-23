@@ -1,4 +1,3 @@
-#define DEBUG 1
 #include <string.h>
 #include <iostream>
 #include <fstream>

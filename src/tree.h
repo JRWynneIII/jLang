@@ -1,3 +1,4 @@
+#define DEBUG 1
 #ifndef TREE_H
 #define TREE_H
 #include<iostream>

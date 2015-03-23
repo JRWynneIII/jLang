@@ -19,6 +19,8 @@ NUMBER [0-9]+
 {NUMBER}(\.{NUMBER}|(\.{NUMBER})?[eE][+-]?{NUMBER}) { yylval.doubleVal = atof(yytext); return FLOAT; }
 {NUMBER} { yylval.intVal = atof(yytext); return NUMBER; }
 [\t ] {}
+'\\n' { yylval.charVal = '\n'; return CHARACTER; }
+'.' { yylval.charVal = yytext[1]; return CHARACTER; }
 "return" { return RETURN; }
 "import" { return IMPORT; }
 "func" { return FUNC; }
@@ -62,9 +64,6 @@ NUMBER [0-9]+
 "," { return COMMA; }
 ":" { return COLON; }
 ";" { return SEMICOLON; }
-'\\n' { yylval.charVal = '\n'; return CHARACTER; }
-'*' { yylval.charVal = '*'; return CHARACTER; }
-\'[a-zA-Z]\' { yylval.charVal = yytext[1]; return CHARACTER; }
 [a-z_][a-zA-Z0-9_]* { yylval.strVal = strdup(yytext); return ID; }
 \"([^"]|\\.)*\" { 
   int len = strlen(yytext);
@@ -78,7 +77,6 @@ NUMBER [0-9]+
       counter++;
     }
   }
-  strcat(st,"\0");
   yylval.strVal = strdup(st);
   return STRING; 
 }

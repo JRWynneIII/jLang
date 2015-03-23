@@ -1,4 +1,3 @@
-#define DEBUG 1
 #include <iostream>
 #include <fstream>
 #include "llvm/Analysis/Passes.h"
@@ -385,6 +384,7 @@ err:
       }
     default: break;
   }
+  return 0;
 }
 
 Value* UnaryExprAST::Codegen()
