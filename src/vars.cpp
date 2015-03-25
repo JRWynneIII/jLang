@@ -116,11 +116,15 @@ Value* VarInitExprAST::Codegen()
   if (NamedValues.find(Name) == NamedValues.end())
   {
     AllocaInst* Alloca;
-    vector<AllocaInst* > oldBindings;
-
     Function* F = Builder.GetInsertBlock()->getParent();
-
     Value* Initial;
+    if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
+    {
+      int arrSize = dynamic_cast<IntExprAST*>(arrayIdx)->Val;  
+      Alloca = Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()),arrayIdx->Codegen());  
+      NamedValues[Name] = Alloca;
+      return Alloca;
+    }
     if(Initd) //if initialized
       Initial = Initd->Codegen();
     else
@@ -154,4 +158,27 @@ Value* VarInitExprAST::Codegen()
   }
 }
 
-
+Value* ArrayIndexAST::Codegen() 
+{
+  VariableExprAST* Var = new VariableExprAST(VarName,typeTab[VarName]);
+  Value* RHS = Var->Codegen();
+  string rtype = Var->getType();
+  cout << rtype << endl;
+  if (rtype != "intArray" && rtype != "doubleArray" && rtype != "charArray")
+  {
+#ifdef DEBUG
+    dumpVars();
+#endif
+    cerr << "\033[31m ERROR: \033[37m Variable is not an array: " << Var->getName() << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    Value* LHS = Index->Codegen();
+    if (LHS == 0)
+      return 0;
+    Value* finalIdx = Builder.CreateAdd(LHS,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+    return Builder.CreateGEP(NamedValues[VarName],finalIdx);
+  }
+  return 0;
+}

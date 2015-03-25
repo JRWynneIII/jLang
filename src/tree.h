@@ -62,7 +62,6 @@ public:
   virtual Value *Codegen();
 };
 
-
 class IntExprAST : public ExprAST 
 {
 public:
@@ -70,6 +69,17 @@ public:
   IntExprAST(double val) : Val(val) {}
   virtual string getType() { return "int"; }
   virtual Value *Codegen();
+};
+
+class ArrayIndexAST : public ExprAST
+{
+  ExprAST* Index;
+  string VarName;
+public:
+  ArrayIndexAST(ExprAST* index, string varname) : Index(index), VarName(varname) {}
+  virtual string getType() { return typeTab[VarName]; }
+  string getName() { return VarName; }
+  virtual Value* Codegen();
 };
 
 class DoubleExprAST : public ExprAST 
@@ -116,8 +126,9 @@ class VarInitExprAST : public ExprAST
   string Name;
   string Type;
   ExprAST* Initd;
+  ExprAST* arrayIdx;
 public:
-  VarInitExprAST(const string &name, const string &type, ExprAST* initd) : Name(name), Type(type), Initd(initd) {}
+  VarInitExprAST(const string &name, const string &type, ExprAST* initd, ExprAST* ArrayIdx = new IntExprAST(1)) : Name(name), Type(type), Initd(initd), arrayIdx(ArrayIdx) {}
   const string &getName() const { return Name; }
   virtual string getType() { return Type; }
   virtual Value* Codegen();

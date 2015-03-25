@@ -45,19 +45,25 @@ Value* BinaryExprAST::Codegen()
 {
   if(Op == '=')
   {
+    bool isVar = false;
+    ArrayIndexAST* LHSA = dynamic_cast<ArrayIndexAST*>(LHS);
     VariableExprAST* LHSE = dynamic_cast<VariableExprAST*>(LHS);
-    if (!LHSE)
+
+    if (!LHSA)
+    {
+        isVar = true;
+    }
+    if (!LHSE && !LHSA)
     {
 #ifdef DEBUG
-    dumpVars();
+        dumpVars();
 #endif
-      cerr << "\033[31m ERROR: \033[37m lvalue must be a variable: " << endl;
-      exit(EXIT_FAILURE);
+        cerr << "\033[31m ERROR: \033[37m lvalue must be a variable: " << endl;
+        exit(EXIT_FAILURE);
     }
 
     //Codegen the right hand side.
     Value* Val = RHS->Codegen();
-
     if(Val == 0)
     {
 #ifdef DEBUG
@@ -67,13 +73,21 @@ Value* BinaryExprAST::Codegen()
       exit(EXIT_FAILURE);
     }
     //Look up the name
-    Value* Variable = NamedValues[LHSE->getName()];
+    Value* Variable;
+    if (isVar)
+      Variable = NamedValues[LHSE->getName()];
+    else
+      Variable = NamedValues[LHSA->getName()];
     if (!Variable)
     {
 #ifdef DEBUG
     dumpVars();
 #endif
-      cerr << "\033[31m ERROR: \033[37m variable not declared!: " << LHSE->getName() << endl;
+      if (isVar)
+        cerr << "\033[31m ERROR: \033[37m variable not declared!: " << LHSE->getName() << endl;
+      else
+        cerr << "\033[31m ERROR: \033[37m variable not declared!: " << LHSA->getName() << endl;
+
       exit(EXIT_FAILURE);
     }
     Value *L = LHS->Codegen();

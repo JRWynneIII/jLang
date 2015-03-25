@@ -57,6 +57,7 @@ void yyerror(char const *s)
   CharExprAST* charAST;
   UnaryExprAST* uo;
   ForExprAST* fLoop;
+  ArrayIndexAST* arr;
   std::vector<ExprAST*>* blk;
 };
 
@@ -124,8 +125,7 @@ void yyerror(char const *s)
 %type <charVal> operators
 %type <strVal> funcName
 %type <strVal> modImport
-%type <tc> cast
-
+%type <arr> array
 %start program
 
 %%
@@ -176,6 +176,7 @@ pointerType: INT CAROT { $$ = "ints"; }
 varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
       | dataType ID EQUAL unaryOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
+      | dataType LSBRACE numVal RSBRACE ID { $$ = new VarInitExprAST($5,$1,NULL,$3); string str($1); str += "Array"; typeTab[$5] = str; }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
@@ -239,13 +240,14 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
       | ID { $$ = new VariableExprAST($1,typeTab[$1]); }
       | funcCall { $$ = $1; }
       | unaryOp { $$ = $1; }
-      /*| cast { $$ = $1; }
+      | array { $$ = $1; }
 
-cast: LPAREN dataType RPAREN ID { /*$$ = new TypeCastExprAST($4,$2); }*/
+array: ID LSBRACE binOp RSBRACE { $$ = new ArrayIndexAST($3,$1); }
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }
      | ID EQUAL binOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]),$3); }
+     | array EQUAL binOp { $$ = new BinaryExprAST('=', $1, $3); }
      | ID EQUAL unaryOp { $$ = new BinaryExprAST('=', new VariableExprAST($1,typeTab[$1]), $3); }
      | binOp PLUS binOp { $$ = new BinaryExprAST('+',$1,$3); }
      | binOp MINUS binOp { $$ = new BinaryExprAST('-',$1,$3); }
