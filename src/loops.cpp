@@ -46,16 +46,19 @@ Value* ForExprAST::Codegen()
   Function *TheFunction = Builder.GetInsertBlock()->getParent();
   BasicBlock *PreheaderBB = Builder.GetInsertBlock();
   // Get alloca for the variable in the entry block.
-  AllocaInst *Alloca = NamedValues[VarName];
+  string Ty = Start->getType();
+  AllocaInst *Alloca;
+  if (Ty != "int")
+    Alloca = Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()),0,"iterator_variable__");
+  else
+    Alloca = NamedValues[VarName];
 #ifdef DEBUG
   dumpVars();
 #endif
-  string Ty = Start->getType();
   Value *StartVal;
-  if (Ty == "double")
-    StartVal = dynamic_cast<DoubleExprAST*>(Start)->Codegen();
-  else
-    StartVal = dynamic_cast<IntExprAST*>(Start)->Codegen();
+  StartVal = Start->Codegen();
+  if (Ty != "int")
+    StartVal = Builder.CreateFPToSI(StartVal,Type::getInt32Ty(getGlobalContext()));
 
   if (!StartVal)
     return 0;
@@ -69,10 +72,7 @@ Value* ForExprAST::Codegen()
   Builder.SetInsertPoint(LoopBB);
   PHINode *Variable;
 
-  if (Ty == "double")
-    Variable = Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()), 2, VarName.c_str());
-  else
-    Variable = Builder.CreatePHI(Type::getInt32Ty(getGlobalContext()), 2, VarName.c_str());
+  Variable = Builder.CreatePHI(Type::getInt32Ty(getGlobalContext()), 2, VarName.c_str());
   Variable->addIncoming(StartVal, PreheaderBB);
 
   Value *EndCond = End->Codegen();
@@ -89,22 +89,17 @@ Value* ForExprAST::Codegen()
   } 
   else
   {
-   if (Ty == "double") 
-    StepVal = ConstantInt::get(Type::getDoubleTy(getGlobalContext()), 1.0);
-   else
     StepVal = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 1);
   }
 
-
   Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());
-  Value *NextVar;
-  if (Ty == "double")
-    NextVar = Builder.CreateFAdd(CurVar, StepVal, "nextvar");
-  else
-    NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
+  Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
   Builder.CreateStore(NextVar, Alloca);
 
+  if (Ty != "int")
+    EndCond = Builder.CreateFPToSI(EndCond,Type::getInt32Ty(getGlobalContext()));
   EndCond = Builder.CreateICmpSLT(CurVar, EndCond, "loopcond");
+
   vector<ExprAST*>::iterator it = Body.begin();
   for(it = Body.begin(); it != Body.end(); it++)
   {
@@ -119,7 +114,7 @@ Value* ForExprAST::Codegen()
   Builder.SetInsertPoint(AfterBB);
   Variable->addIncoming(NextVar,LoopEnd);
 
-  return Constant::getNullValue(Type::getInt32Ty(getGlobalContext()));
+  return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
 }
 
 Value* IfExprAST::Codegen()

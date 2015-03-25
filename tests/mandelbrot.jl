@@ -1,10 +1,8 @@
 import stdio;
 
 func printDensity(int d) -> int {
-  char c
-  char^ ch = c^
   if d == 1 {
-    putchar('.')
+    putchar('0')
   }
   else {
     putchar('*')
@@ -14,44 +12,50 @@ func printDensity(int d) -> int {
 
 func main() -> int
 {
-  double xsize = 59.0
-  double ysize = 21.0
-  double minre = -2.0
-  double minim = -1.0
-  double maxre = 1.0
-  double maxim = 1.0
-  double stepx = 0.05084745762
-  double stepy = 0.09523809523
-  double y
+  int a
+  int b
   double x
-  double zr
-  double zi
-  int n
-  double a
-  double b
-  for y = 0.0, ysize, 1.0
+  double y
+  int maxiter = 31
+  int escapeval = 0
+  double sq = 0.0
+  int iter
+  for b=0,32
   {
-    double im = minim+stepy*y
-    for x = 0.0, xsize
+    for a = 0, 85
     {
-      double re = minre+stepx*x
-      zr = re
-      zi = im
-      for n=0, 30
+      double zi = 0.0
+      double zr = 0.0
+      double zni = 0.0
+      double znr = 0.0
+      x = (a - 50.0) / 20.0
+      y = (b - 16.0) / 10.0
+      iter = 1
+      zi = 0.0
+      zr = 0.0
+      for iter = 0, maxiter
       {
-        a = zr*zr
-        b = zi*zi 
-        if (a+b)>4.0
+        zni = 2.0* zi * zr + y
+        znr = zr * zr - zi* zi + x
+        zi = zni
+        zr = znr
+        sq = zi*zi + zr*zr
+        if sq > 4.0
         {
-          printDensity(1)
-        }
-        else
-        {
-          zi = 2.0*zr*zi+im
-          zr = a-b+re
-          printDensity(0)
+          escapeval = 1
         }
       }
+      if escapeval == 1
+      {
+        putchar('*')
+      }
+      else
+      {
+        putchar(' ')
+      }
+      escapeval = 0
     }
+    putchar('\n')
   }
+  1
 }
