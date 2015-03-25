@@ -215,6 +215,7 @@ funcProto: FUNC funcName LPAREN paramDefs RPAREN RARROW dataType { $$ = new Prot
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
        | operators ID { $$ = new UnaryExprAST($1,new VariableExprAST($2,typeTab[$2])); }
+       | operators array { $$ = new UnaryExprAST($1, $2); }
        | EMARK binOp { $$ = new UnaryExprAST('!', $2); }
       
 
@@ -261,19 +262,3 @@ binOp: numVal
      | binOp COMPEQUAL numVal { $$ = new BinaryExprAST('E', $1, $3); }
      | binOp operators binOp { $$ = new BinaryExprAST($2,$1,$3); }
 
-/*
-
-                          : curVec = topLevelVec
-
-extern func name() -> int : curvec.push_back(externnode)
-
-func main() -> int        : stack.push(curVec); curVec = new Vector;
-  int a = 0               : curVec.push_back(intNode)
-  for a=0,10              : stack.push(curVec); curVec = new Vector;
-    a++                   : curVec.push_back(binOpNode)
-  }                       : tmp = new ForLoopNode(*curVec); curVec = stack.top(); stack.pop(); curVec.push_back(tmp);
-  1                       : curVec.push_back(intNode)
-}                         : tmp = new funcNode(*curVec)); curvec = stack.top(); stack.pop(); curVec.push_back(tmp);
-
-After parse, the tree will exist in curVec(topLevelVec). Now iteration and code generation can run
-*/
