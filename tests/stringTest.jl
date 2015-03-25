@@ -1,7 +1,5 @@
 import stdio;
 
-extern func puts(string s) -> int;
-
 func main() -> int
 {
   int i
