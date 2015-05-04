@@ -108,8 +108,17 @@ Value* VariableExprAST::Codegen()
     cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
     exit(EXIT_FAILURE);
   }
+  if (getType() == "intArray" || getType() == "doubleArray" || getType() == "charArray")
+  {
+    Value* zero = ConstantInt::get(IntegerType::getInt32Ty(getGlobalContext()),0);
+    vector<Value*> idx;
+    idx.push_back(zero);
+    idx.push_back(zero);
+    return Builder.CreateGEP(NamedValues[Name],idx);
+  }
   return Builder.CreateLoad(V, Name);
 }
+
 
 Value* VarInitExprAST::Codegen()
 {
@@ -121,7 +130,9 @@ Value* VarInitExprAST::Codegen()
     if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
     {
       int arrSize = dynamic_cast<IntExprAST*>(arrayIdx)->Val;  
-      Alloca = Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()),arrayIdx->Codegen());  
+      Value* size = ConstantInt::get(IntegerType::getInt32Ty(getGlobalContext()),arrSize);
+      ArrayType* ArrayTy = ArrayType::get(IntegerType::get(getGlobalContext(), 32), arrSize);
+      Alloca = Builder.CreateAlloca(ArrayTy,0);  
       NamedValues[Name] = Alloca;
       return Alloca;
     }
@@ -163,7 +174,6 @@ Value* ArrayIndexAST::Codegen()
   VariableExprAST* Var = new VariableExprAST(VarName,typeTab[VarName]);
   Value* RHS = Var->Codegen();
   string rtype = Var->getType();
-  cout << rtype << endl;
   if (rtype != "intArray" && rtype != "doubleArray" && rtype != "charArray")
   {
 #ifdef DEBUG
@@ -176,9 +186,16 @@ Value* ArrayIndexAST::Codegen()
   {
     Value* LHS = Index->Codegen();
     if (LHS == 0)
+    {
       return 0;
-    Value* finalIdx = Builder.CreateAdd(LHS,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
-    return Builder.CreateGEP(NamedValues[VarName],finalIdx);
+    }
+    Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
+    //Value* finalIdx = Builder.CreateSub(LHS,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+    vector<Value*> idx;
+    idx.push_back(zero);
+    idx.push_back(LHS);
+   // ArrayRef<unsigned> arref(dynamic_cast<Constant*>(finalIdx)->getZExtValue());
+    //return Builder.CreateExtractElement(NamedValues[VarName],3);
+    return Builder.CreateGEP(NamedValues[VarName],idx);
   }
-  return 0;
 }

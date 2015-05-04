@@ -100,6 +100,8 @@ Value* BinaryExprAST::Codegen()
       R = Builder.CreateFPToSI(R,Type::getInt32Ty(getGlobalContext()));
     else if (lty == "double" && rty == "int")
       R = Builder.CreateSIToFP(R,Type::getDoubleTy(getGlobalContext()));
+    else if (lty == "intArray" || lty == "doubleArray" || lty == "charArray")
+      return Builder.CreateStore(R,L);
     return Builder.CreateStore(R,Variable);
   }
 
@@ -433,17 +435,28 @@ Value* UnaryExprAST::Codegen()
       }
     case '@':
       {
-        if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "string" && typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "ints" && typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "doubles" && typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] != "chars")
+        if (typeTab[RHS->getName()] != "string" && typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars" && typeTab[RHS->getName()] != "intArray" && typeTab[RHS->getName()] != "doubleArray" && typeTab[RHS->getName()] != "charArray")
         {
 #ifdef DEBUG
           dumpVars();
 #endif
-          cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << dynamic_cast<VariableExprAST*>(RHS)->getName() << ") for dereference operator!" << endl;
+          cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << RHS->getName() << ") for dereference operator!" << endl;
           exit(EXIT_FAILURE);
         }
-        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
-        Value* derefPtr = Builder.CreateLoad(allocaPtr,"derefPtr");
-        return Builder.CreateLoad(derefPtr,"derefVal");
+        if (typeTab[RHS->getName()] != "intArray" && typeTab[RHS->getName()] != "doubleArray" && typeTab[RHS->getName()] != "charArray")
+        {
+          Value* gep = RHS->Codegen();
+          AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+          //Value* derefPtr = Builder.CreateLoad(,"derefPtr");
+          return Builder.CreateLoad(gep,"derefVal");
+        }
+        else
+        {
+          //is an array
+          Value* allocaPtr = RHS->Codegen();  //returns a GEP ptr
+          Value* derefPtr = Builder.CreateLoad(allocaPtr,"derefPtr");
+          return Builder.CreateLoad(derefPtr,"derefVal");
+        }
 
       }
     case '!':
