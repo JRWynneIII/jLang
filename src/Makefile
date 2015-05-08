@@ -2,7 +2,7 @@ SRC= handler.cpp jlang.tab.cpp lex.yy.c vars.cpp loops.cpp functions.cpp ops.cpp
 all: jlangc
 
 jlangc: ${SRC} 
-	/usr/bin/clang++ -g ${SRC} `llvm-config --cppflags --ldflags --libs core jit native bitwriter` -O0 -o jlangc
+	clang++ -pthread -w -g -std=c++11 -I${HOME}/lib/boost/boost_1_58_0/ ${SRC} `llvm-config --cppflags --ldflags --libs core mcjit native bitwriter --system-libs` -O0 -o jlangc
 
 lex.yy.c: lexer.l
 	flex lexer.l

@@ -1,17 +1,19 @@
 #include <iostream>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <fstream>
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/Analysis/Verifier.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/StringRef.h"
@@ -58,20 +60,26 @@ int main(int argc, char*argv[])
   }
 
   FunctionPassManager opt(theModule);
-  opt.add(createBasicAliasAnalysisPass());
-  opt.add(new DataLayout("e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"));
-  opt.add(createPromoteMemoryToRegisterPass());
-  opt.add(createInstructionCombiningPass());
-  opt.add(createReassociatePass());
-  opt.add(createGVNPass());
-  opt.add(createCFGSimplificationPass());
-  opt.doInitialization();
+ // opt.add(createBasicAliasAnalysisPass());
+ // opt.add(new DataLayout("e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"));
+ // opt.add(createPromoteMemoryToRegisterPass());
+ // opt.add(createInstructionCombiningPass());
+ // opt.add(createReassociatePass());
+ // opt.add(createGVNPass());
+ // opt.add(createCFGSimplificationPass());
+ // opt.doInitialization();
 #ifdef DEBUG
   theModule->dump();
 #endif
 
   string Errors, ErrorCatch;
-  raw_fd_ostream bcFile("t.ll", Errors, sys::fs::F_Binary);
+  int fd = open("t.ll", O_RDWR | O_CREAT | O_TRUNC);
+  if (fd <= 0)
+  {
+    cerr << "FILE NOT OPENED\nfd = " << fd << endl;
+    exit(EXIT_FAILURE);
+  }
+  raw_fd_ostream bcFile(fd, false);
   WriteBitcodeToFile(theModule,bcFile);
   return EXIT_SUCCESS;
 }
