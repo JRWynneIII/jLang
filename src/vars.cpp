@@ -107,14 +107,6 @@ Value* VariableExprAST::Codegen()
     cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
     exit(EXIT_FAILURE);
   }
-  if (getType() == "intArray" || getType() == "doubleArray" || getType() == "charArray")
-  {
-    Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
-    vector<Value*> idx;
-    idx.push_back(zero);
-    idx.push_back(zero);
-    return Builder.CreateGEP(NamedValues[Name],idx);
-  }
   return Builder.CreateLoad(V, Name);
 }
 
@@ -149,15 +141,15 @@ Value* VarInitExprAST::Codegen()
       if (Type == "double")
         Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
       else if (Type == "doubles")
-        Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
+        Initial = ConstantPointerNull::get(doublePtr);
       else if (Type == "int")
         Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
       else if (Type == "ints")
-        Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+        Initial = ConstantPointerNull::get(intPtr32);
       else if (Type == "char")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
       else if (Type == "chars")
-        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
+        Initial = ConstantPointerNull::get(intPtr8);
       else if (Type == "string")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
     }
@@ -180,6 +172,14 @@ Value* ArrayIndexAST::Codegen()
   VariableExprAST* Var = new VariableExprAST(VarName,typeTab[VarName]);
   Value* RHS = Var->Codegen();
   string rtype = Var->getType();
+  if (Index->getType() == "null")
+  {
+    Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
+    vector<Value*> idx;
+    idx.push_back(zero);
+    idx.push_back(zero);
+    return Builder.CreateInBoundsGEP(NamedValues[VarName],idx);
+  }
   if (rtype != "intArray" && rtype != "doubleArray" && rtype != "charArray" && rtype != "ints" && rtype != "doubles" && rtype != "chars")
   {
 #ifdef DEBUG
@@ -195,14 +195,15 @@ Value* ArrayIndexAST::Codegen()
     {
       return 0;
     }
+    Value* ptr = NamedValues[VarName];
+    if (rtype == "ints" || rtype == "doubles" || rtype == "chars")
+    {
+      ptr = Builder.CreateLoad(ptr);
+    }
     Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
-    //Value* finalIdx = Builder.CreateSub(LHS,ConstantInt::get(Type::getInt64Ty(getGlobalContext()),1));
-    Value* finalIdx = Builder.CreateZExt(LHS,Type::getInt64Ty(getGlobalContext()));
     vector<Value*> idx;
     idx.push_back(zero);
     idx.push_back(LHS);
-   // ArrayRef<unsigned> arref(dynamic_cast<Constant*>(finalIdx)->getZExtValue());
-    //return Builder.CreateExtractElement(NamedValues[VarName],3);
-    return Builder.CreateInBoundsGEP(NamedValues[VarName],idx);
+    return Builder.CreateInBoundsGEP(ptr,idx);
   }
 }

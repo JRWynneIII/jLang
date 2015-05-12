@@ -1,8 +1,6 @@
 import stdio;
 
-extern func printf(string fmt, int a) -> int;
-
-func main() -> int
+func fill() -> int^
 {
   int[10] arr
   arr[0] = 0
@@ -15,10 +13,17 @@ func main() -> int
   arr[7] = 7
   arr[8] = 8
   arr[9] = 9
+  arr[]
+}
+
+func main() -> int
+{
+  int^ test = fill()
+  test = @test
   int i = 0
   for i=0,9
   {
-    printf("%d ",@arr[i])
+    printf("%d\n",@test[i])
   }
   1
 }

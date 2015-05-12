@@ -58,6 +58,7 @@ void yyerror(char const *s)
   UnaryExprAST* uo;
   ForExprAST* fLoop;
   ArrayIndexAST* arr;
+  nullExprAST* null;
   std::vector<ExprAST*>* blk;
 };
 
@@ -123,7 +124,6 @@ void yyerror(char const *s)
 %type <blk> expressions
 %type <blk> expression
 %type <charVal> operators
-%type <strVal> funcName
 %type <strVal> modImport
 %type <arr> array
 %start program
@@ -207,11 +207,8 @@ kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
 kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
            | KERNEL ID LPAREN           RPAREN LARROW NUMBER
 
-funcName: ID operators { string str($1); str += boost::lexical_cast<string>((int)$2); char* str2 = new char[str.length() + 1]; strcpy(str2,str.c_str()); $$ = str2; }
-        | ID  { $$ = $1; }
-
-funcProto: FUNC funcName LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
-         | FUNC funcName LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
+         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
        | operators array { $$ = new UnaryExprAST($1, $2); }
@@ -244,6 +241,7 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
       | array { $$ = $1; }
 
 array: ID LSBRACE binOp RSBRACE { $$ = new ArrayIndexAST($3,$1); }
+     | ID LSBRACE RSBRACE { $$ = new ArrayIndexAST(new nullExprAST(), $1); }
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }

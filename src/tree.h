@@ -52,6 +52,16 @@ public:
   virtual Value* Codegen();
 };
 
+class nullExprAST : public ExprAST
+{
+public:
+  string Name;
+  nullExprAST() : Name("null") {}
+  virtual string getType() { return "null"; }
+  virtual string getName() { return "null"; }
+  virtual Value* Codegen() {}
+};
+
 class IfExprAST : public ExprAST
 {
   ExprAST *Cond;
