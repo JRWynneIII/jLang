@@ -453,8 +453,8 @@ Value* UnaryExprAST::Codegen()
         {
           //is an array
           Value* allocaPtr = RHS->Codegen();  //returns a GEP ptr
-          Value* derefPtr = Builder.CreateLoad(allocaPtr,"derefPtr");
-          return Builder.CreateLoad(derefPtr,"derefVal");
+          return Builder.CreateLoad(allocaPtr,"derefPtr");
+         // return Builder.CreateLoad(derefPtr,"derefVal");
         }
 
       }

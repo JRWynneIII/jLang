@@ -93,7 +93,6 @@ Value* ForExprAST::Codegen()
 
   Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());
   Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
-  Builder.CreateStore(NextVar, Alloca);
 
   if (Ty != "int")
     EndCond = Builder.CreateFPToSI(EndCond,Type::getInt32Ty(getGlobalContext()));
@@ -106,6 +105,7 @@ Value* ForExprAST::Codegen()
       return 0;
   }
 
+  Builder.CreateStore(NextVar, Alloca);
 
   BasicBlock *LoopEnd = Builder.GetInsertBlock();
   BasicBlock *AfterBB = BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);

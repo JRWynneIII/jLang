@@ -15,8 +15,11 @@ func main() -> int
   arr[7] = 7
   arr[8] = 8
   arr[9] = 9
-  int b = arr[3]
-  int a = b
-  printf("%d", a)
+  int i = 0
+  for i=0,9
+  {
+    printf("%d ",@arr[i])
+  }
   1
 }
+

@@ -109,7 +109,7 @@ Value* VariableExprAST::Codegen()
   }
   if (getType() == "intArray" || getType() == "doubleArray" || getType() == "charArray")
   {
-    Value* zero = ConstantInt::get(IntegerType::getInt32Ty(getGlobalContext()),0);
+    Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
     vector<Value*> idx;
     idx.push_back(zero);
     idx.push_back(zero);
@@ -128,11 +128,18 @@ Value* VarInitExprAST::Codegen()
     Value* Initial;
     if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
     {
+      //get the size of the array
       int arrSize = dynamic_cast<IntExprAST*>(arrayIdx)->Val;  
-      Value* size = ConstantInt::get(IntegerType::getInt32Ty(getGlobalContext()),arrSize);
-      ArrayType* ArrayTy = ArrayType::get(IntegerType::get(getGlobalContext(), 32), arrSize);
+      //store the size into a an llvm int
+      Value* size = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),arrSize);
+      //create teh type for an array
+      ArrayType* ArrayTy = ArrayType::get(Type::getInt32Ty(getGlobalContext()), arrSize);
+      //Allocate the array??
       Alloca = Builder.CreateAlloca(ArrayTy,0);  
+      //store the alloca in the symbol table
       NamedValues[Name] = Alloca;
+      Alloca->setAlignment(4);
+      //return the alloca
       return Alloca;
     }
     if(Initd) //if initialized
@@ -173,7 +180,7 @@ Value* ArrayIndexAST::Codegen()
   VariableExprAST* Var = new VariableExprAST(VarName,typeTab[VarName]);
   Value* RHS = Var->Codegen();
   string rtype = Var->getType();
-  if (rtype != "intArray" && rtype != "doubleArray" && rtype != "charArray")
+  if (rtype != "intArray" && rtype != "doubleArray" && rtype != "charArray" && rtype != "ints" && rtype != "doubles" && rtype != "chars")
   {
 #ifdef DEBUG
     dumpVars();
@@ -189,12 +196,13 @@ Value* ArrayIndexAST::Codegen()
       return 0;
     }
     Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
-    //Value* finalIdx = Builder.CreateSub(LHS,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),1));
+    //Value* finalIdx = Builder.CreateSub(LHS,ConstantInt::get(Type::getInt64Ty(getGlobalContext()),1));
+    Value* finalIdx = Builder.CreateZExt(LHS,Type::getInt64Ty(getGlobalContext()));
     vector<Value*> idx;
     idx.push_back(zero);
     idx.push_back(LHS);
    // ArrayRef<unsigned> arref(dynamic_cast<Constant*>(finalIdx)->getZExtValue());
     //return Builder.CreateExtractElement(NamedValues[VarName],3);
-    return Builder.CreateGEP(NamedValues[VarName],idx);
+    return Builder.CreateInBoundsGEP(NamedValues[VarName],idx);
   }
 }
