@@ -37,6 +37,7 @@ extern Module *theModule;
 extern IRBuilder<> Builder;
 map<string, AllocaInst*> NamedValues;
 PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0);
+PointerType* intPtr64 = PointerType::get(Type::getInt64Ty(getGlobalContext()), 0);
 PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);
 PointerType* doublePtr = PointerType::get(Type::getDoubleTy(getGlobalContext()), 0);
 
@@ -107,6 +108,7 @@ Value* VariableExprAST::Codegen()
     cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
     exit(EXIT_FAILURE);
   }
+  cout << Type << endl;
   return Builder.CreateLoad(V, Name);
 }
 
@@ -199,6 +201,10 @@ Value* ArrayIndexAST::Codegen()
     if (rtype == "ints" || rtype == "doubles" || rtype == "chars")
     {
       ptr = Builder.CreateLoad(ptr);
+      Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
+      vector<Value*> idx;
+      idx.push_back(LHS);
+      return Builder.CreateInBoundsGEP(ptr,idx);
     }
     Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0);
     vector<Value*> idx;
