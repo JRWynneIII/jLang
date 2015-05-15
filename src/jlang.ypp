@@ -46,6 +46,7 @@ void yyerror(char const *s)
   VarInitExprAST* varInit;
   TypeCastExprAST* tc;
   FunctionAST* fdef;
+  KernelAST* kdef;
   PrototypeAST* proto;
   CallExprAST* functionCall;
   IfExprAST* _if;
@@ -58,6 +59,7 @@ void yyerror(char const *s)
   UnaryExprAST* uo;
   ForExprAST* fLoop;
   ArrayIndexAST* arr;
+  nullExprAST* null;
   std::vector<ExprAST*>* blk;
 };
 
@@ -108,7 +110,9 @@ void yyerror(char const *s)
 %type <strVal> pointerType
 %type <varInit> varDef
 %type <proto> funcDef
+%type <proto> kernelDef
 %type <proto> funcProto
+%type <proto> kernelProto
 %type <functionCall> funcCall
 %type <_if> ifBranch
 %type <blk> elseBranch
@@ -123,7 +127,6 @@ void yyerror(char const *s)
 %type <blk> expressions
 %type <blk> expression
 %type <charVal> operators
-%type <strVal> funcName
 %type <strVal> modImport
 %type <arr> array
 %start program
@@ -137,7 +140,7 @@ expressions: expressions expression
 expression: varDef  { lines->push_back($1); }
           | modImport { loadModule($1); lineNum=0; }
           | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
-          | kernelDef 
+          | kernelDef { KernelAST* tmp = new KernelAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | forLoop { lines->push_back($1); }
           | extern { lines->push_back($1); }
           | funcCall  { lines->push_back($1); }
@@ -202,16 +205,13 @@ ifBranch: IF binOp block             { vector<ExprAST*> tmp = *lines; $$ = new I
 
 funcDef: funcProto block { $$ = $1; }
 
-kernelDef: kernelProto block { cout << "Kernel defined!\n"; }
+kernelDef: kernelProto block { $$ = $1;}
 
-kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER 
-           | KERNEL ID LPAREN           RPAREN LARROW NUMBER
+kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER { $$ = new PrototypeAST($2,args,boost::lexical_cast<string>($7),true); args.clear(); }
+           | KERNEL ID LPAREN           RPAREN LARROW NUMBER { $$ = new PrototypeAST($2,args,boost::lexical_cast<string>($6),true); args.clear(); }
 
-funcName: ID operators { string str($1); str += boost::lexical_cast<string>((int)$2); char* str2 = new char[str.length() + 1]; strcpy(str2,str.c_str()); $$ = str2; }
-        | ID  { $$ = $1; }
-
-funcProto: FUNC funcName LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
-         | FUNC funcName LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
+funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
+         | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
        | operators array { $$ = new UnaryExprAST($1, $2); }
@@ -244,6 +244,7 @@ numVal: NUMBER { $$ = new IntExprAST($1); }
       | array { $$ = $1; }
 
 array: ID LSBRACE binOp RSBRACE { $$ = new ArrayIndexAST($3,$1); }
+     | ID LSBRACE RSBRACE { $$ = new ArrayIndexAST(new nullExprAST(), $1); }
 
 binOp: numVal
      | LPAREN binOp RPAREN { $$ = $2; }

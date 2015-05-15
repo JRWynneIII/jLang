@@ -2,16 +2,15 @@
 #include <fstream>
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/Analysis/Verifier.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/StringRef.h"
@@ -94,7 +93,6 @@ Value* ForExprAST::Codegen()
 
   Value *CurVar = Builder.CreateLoad(Alloca, VarName.c_str());
   Value *NextVar = Builder.CreateAdd(CurVar, StepVal, "nextvar");
-  Builder.CreateStore(NextVar, Alloca);
 
   if (Ty != "int")
     EndCond = Builder.CreateFPToSI(EndCond,Type::getInt32Ty(getGlobalContext()));
@@ -107,6 +105,7 @@ Value* ForExprAST::Codegen()
       return 0;
   }
 
+  Builder.CreateStore(NextVar, Alloca);
 
   BasicBlock *LoopEnd = Builder.GetInsertBlock();
   BasicBlock *AfterBB = BasicBlock::Create(getGlobalContext(), "afterloop", TheFunction);

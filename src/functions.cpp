@@ -2,16 +2,15 @@
 #include <fstream>
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/Analysis/Verifier.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/StringRef.h"
@@ -215,6 +214,11 @@ void PrototypeAST::CreateArgumentAllocas(Function *F)
     NamedValues[Args[Idx]->getName()] = Alloca;
     typeTab[Args[Idx]->getName()] = Args[Idx]->getType();
   }
+}
+
+Function* KernelAST::Codegen()
+{
+
 }
 
 Function* FunctionAST::Codegen()

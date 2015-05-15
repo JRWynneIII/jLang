@@ -6,15 +6,14 @@
 #include<vector>
 #include<stdlib.h>
 #include "llvm/Analysis/Passes.h"
-#include "llvm/Analysis/Verifier.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 using namespace std;
@@ -51,6 +50,16 @@ public:
   virtual string getType() { return typeTab[VarName]; }
   virtual string getName() { return VarName; }
   virtual Value* Codegen();
+};
+
+class nullExprAST : public ExprAST
+{
+public:
+  string Name;
+  nullExprAST() : Name("null") {}
+  virtual string getType() { return "null"; }
+  virtual string getName() { return "null"; }
+  virtual Value* Codegen() {}
 };
 
 class IfExprAST : public ExprAST
@@ -197,7 +206,7 @@ class PrototypeAST : public ExprAST
   vector<VarInitExprAST*> Args;
   string Ty;
 public:
-  PrototypeAST(const string &name, const vector<VarInitExprAST*> &args, const string& type) : Name(name), Args(args), Ty(type) {}
+  PrototypeAST(const string &name, const vector<VarInitExprAST*> &args, const string& type, bool isKernel = false) : Name(name), Args(args), Ty(type) {}
   virtual string getType() { return Ty; }
   virtual string getName() { return Name; }
   Function *Codegen();
@@ -210,6 +219,18 @@ class FunctionAST : public ExprAST
   vector<ExprAST*> Body;
 public:
   FunctionAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
+  virtual string getType() { return Proto->getType(); }
+  virtual string getName() { return Proto->getName(); }
+  
+  Function *Codegen();
+};
+
+class KernelAST : public ExprAST
+{
+  PrototypeAST *Proto;
+  vector<ExprAST*> Body;
+public:
+  KernelAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
   virtual string getType() { return Proto->getType(); }
   virtual string getName() { return Proto->getName(); }
   
