@@ -1,6 +1,16 @@
 import stdio;
 
-func fill() -> int^
+func fill(int^ t) -> int
+{
+  int i = 0
+  for i=0,9
+  {
+    printf("%d ",@t[i])
+  }
+  1
+}
+
+func main() -> int
 {
   int[10] arr
   arr[0] = 0
@@ -13,24 +23,13 @@ func fill() -> int^
   arr[7] = 7
   arr[8] = 8
   arr[9] = 9
-  int i
-  int^ t = arr[]
+  int i 
   for i=0,9
   {
-    printf("%d ",@t[i])
+    printf("%d ",@arr[i])
   }
   putchar('\n')
-  arr[]
-}
-
-func main() -> int
-{
-  int^ t = fill()
-  int i = 0
-  for i=0,9
-  {
-    printf("%d ",@t[i])
-  }
+  fill(arr[])
   1
 }
 
