@@ -216,6 +216,11 @@ void PrototypeAST::CreateArgumentAllocas(Function *F)
   }
 }
 
+Function* KernelAST::Codegen()
+{
+
+}
+
 Function* FunctionAST::Codegen()
 {
   Function* theFunction = Proto->Codegen();

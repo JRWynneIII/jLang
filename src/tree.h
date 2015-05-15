@@ -206,7 +206,7 @@ class PrototypeAST : public ExprAST
   vector<VarInitExprAST*> Args;
   string Ty;
 public:
-  PrototypeAST(const string &name, const vector<VarInitExprAST*> &args, const string& type) : Name(name), Args(args), Ty(type) {}
+  PrototypeAST(const string &name, const vector<VarInitExprAST*> &args, const string& type, bool isKernel = false) : Name(name), Args(args), Ty(type) {}
   virtual string getType() { return Ty; }
   virtual string getName() { return Name; }
   Function *Codegen();
@@ -219,6 +219,18 @@ class FunctionAST : public ExprAST
   vector<ExprAST*> Body;
 public:
   FunctionAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
+  virtual string getType() { return Proto->getType(); }
+  virtual string getName() { return Proto->getName(); }
+  
+  Function *Codegen();
+};
+
+class KernelAST : public ExprAST
+{
+  PrototypeAST *Proto;
+  vector<ExprAST*> Body;
+public:
+  KernelAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
   virtual string getType() { return Proto->getType(); }
   virtual string getName() { return Proto->getName(); }
   
