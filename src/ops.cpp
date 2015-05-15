@@ -101,6 +101,8 @@ Value* BinaryExprAST::Codegen()
       R = Builder.CreateSIToFP(R,Type::getDoubleTy(getGlobalContext()));
     else if (lty == "intArray" || lty == "doubleArray" || lty == "charArray")
       return Builder.CreateStore(R,L);
+    else if (lty == "ints" || lty == "doubles" || lty == "chars")
+      return Builder.CreateStore(R,L);
     return Builder.CreateStore(R,Variable);
   }
 
