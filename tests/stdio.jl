@@ -4,3 +4,4 @@ extern func puts(string str) -> int;
 extern func puts(char str) -> int;
 extern func sprintf(char^ str, string format, int i) -> int;
 extern func abs(int n) -> int;
+extern func malloc(int a) -> int^;
