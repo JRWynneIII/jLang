@@ -21,7 +21,7 @@ extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
 extern int lineNum;
-extern map<std::string, llvm::AllocaInst*> NamedValues;
+extern map<string, Value*> NamedValues;
 using namespace std;
 void yyerror(char const *s) 
 { 
@@ -54,6 +54,7 @@ void yyerror(char const *s)
   DoubleExprAST* dval;
   IntExprAST* ival;
   ExprAST* expr;
+  globalVarExprAST* glob;
   stringExprAST* strAST;
   CharExprAST* charAST;
   UnaryExprAST* uo;
@@ -65,7 +66,7 @@ void yyerror(char const *s)
 
 %token NUMBER FLOAT
 %token STRING ID END CHARACTER
-%token FUNC KERNEL EXTERN FOR IF ELSE ELIF IMPORT RETURN
+%token FUNC KERNEL EXTERN FOR IF ELSE ELIF IMPORT RETURN GLOBAL
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
 %token EQUAL COMPEQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
@@ -95,6 +96,7 @@ void yyerror(char const *s)
 %type <strVal> FUNC
 %type <strVal> IMPORT 
 %type <strVal> EXTERN
+%type <strVal> GLOBAL
 %type <strVal> KERNEL
 %type <strVal> RARROW
 %type <strVal> LARROW
@@ -129,6 +131,7 @@ void yyerror(char const *s)
 %type <charVal> operators
 %type <strVal> modImport
 %type <arr> array
+%type <glob> globalDef
 %start program
 
 %%
@@ -139,6 +142,7 @@ expressions: expressions expression
 
 expression: varDef  { lines->push_back($1); }
           | modImport { loadModule($1); lineNum=0; }
+          | globalDef { lines->push_back($1); }
           | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | kernelDef { KernelAST* tmp = new KernelAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | forLoop { lines->push_back($1); }
@@ -180,6 +184,11 @@ varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
       | dataType ID EQUAL unaryOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
       | dataType LSBRACE numVal RSBRACE ID { string str($1); str += "Array"; typeTab[$5] = str; $$ = new VarInitExprAST($5,str.c_str(),NULL,$3);  }
+
+globalDef: GLOBAL dataType ID { $$ = new globalVarExprAST($3,$2,NULL); typeTab[$3] = $2; }
+         | GLOBAL dataType ID EQUAL binOp { $$ = new globalVarExprAST($3,$2,$5); typeTab[$3] = $2; }
+         | GLOBAL dataType ID EQUAL unaryOp { $$ = new globalVarExprAST($3,$2,$5); typeTab[$3] = $2; }
+         | GLOBAL dataType LSBRACE numVal RSBRACE ID { string str($2); str += "Array"; typeTab[$6] = str; $$ = new globalVarExprAST($6,str.c_str(), NULL,$4); }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 

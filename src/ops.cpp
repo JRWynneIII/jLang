@@ -34,7 +34,7 @@ extern int lineNum;
 
 extern Module *theModule;
 extern IRBuilder<> Builder;
-extern map<string, AllocaInst*> NamedValues;
+extern map<string, Value*> NamedValues;
 extern PointerType* intPtr32;
 extern PointerType* intPtr8;
 extern PointerType* doublePtr;
@@ -421,17 +421,17 @@ Value* UnaryExprAST::Codegen()
     case '^':
       if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "int")
       {
-        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
+        Value* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
         return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt32Ty(getGlobalContext()),0)); 
       }
       else if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "double")
       {
-        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
+        Value* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
         return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getDoubleTy(getGlobalContext()),0.0)); 
       }
       else if (typeTab[dynamic_cast<VariableExprAST*>(RHS)->getName()] == "char")
       {
-        AllocaInst* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
+        Value* allocaPtr = NamedValues[dynamic_cast<VariableExprAST*>(RHS)->getName()];
         return Builder.CreateGEP(allocaPtr,ConstantInt::get(Type::getInt8Ty(getGlobalContext()),0)); 
       }
     case '@':
@@ -447,7 +447,7 @@ Value* UnaryExprAST::Codegen()
         if (typeTab[RHS->getName()] != "intArray" && typeTab[RHS->getName()] != "doubleArray" && typeTab[RHS->getName()] != "charArray")
         {
           Value* gep = RHS->Codegen();
-          AllocaInst* allocaPtr = NamedValues[RHS->getName()];
+          Value* allocaPtr = NamedValues[RHS->getName()];
           //Value* derefPtr = Builder.CreateLoad(,"derefPtr");
           return Builder.CreateLoad(gep,"derefVal");
         }

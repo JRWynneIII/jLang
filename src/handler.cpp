@@ -43,7 +43,7 @@ extern int YY_FLUSH_BUFFER;
 extern vector<ExprAST*>* lines;
 extern YY_BUFFER_STATE getCurBuf();
 extern Module *theModule;
-extern map<string, AllocaInst*> NamedValues;
+extern map<string, Value*> NamedValues;
 
 void loadModule(const char* name)
 {

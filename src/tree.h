@@ -151,6 +151,19 @@ public:
   virtual Value* Codegen();
 };
 
+class globalVarExprAST : public ExprAST
+{
+  string Name;
+  string Type;
+  ExprAST* Initd;
+  ExprAST* arrayIdx;
+public:
+  globalVarExprAST(const string &name, const string &type, ExprAST* initd, ExprAST* ArrayIdx = new IntExprAST(1)) : Name(name), Type(type), Initd(initd), arrayIdx(ArrayIdx) {}
+  virtual string getName() { return Name; }
+  virtual string getType() { return Type; }
+  virtual Value* Codegen();
+};
+
 class TypeCastExprAST : public ExprAST
 {
   string toType;

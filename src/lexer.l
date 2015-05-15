@@ -30,6 +30,7 @@ NUMBER [0-9]+
 "char" { return CHAR; }
 "string" { return STR; }
 "kernel" { return KERNEL; }
+"global" { return GLOBAL; }
 "for" { return FOR; }
 "if" { return IF; }
 "else" { return ELSE; }

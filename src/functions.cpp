@@ -34,7 +34,7 @@ extern int lineNum;
 
 extern Module *theModule;
 extern IRBuilder<> Builder;
-extern map<string, AllocaInst*> NamedValues;
+extern map<string, Value*> NamedValues;
 extern PointerType* intPtr32; 
 extern PointerType* intPtr8; 
 extern PointerType* doublePtr;

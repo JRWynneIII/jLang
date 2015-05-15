@@ -34,7 +34,7 @@ extern int lineNum;
 
 extern Module *theModule;
 extern IRBuilder<> Builder;
-extern map<string, AllocaInst*> NamedValues;
+extern map<string, Value*> NamedValues;
 extern PointerType* intPtr32; 
 extern PointerType* intPtr8;
 extern PointerType* doublePtr;
@@ -46,7 +46,7 @@ Value* ForExprAST::Codegen()
   BasicBlock *PreheaderBB = Builder.GetInsertBlock();
   // Get alloca for the variable in the entry block.
   string Ty = Start->getType();
-  AllocaInst *Alloca;
+  Value *Alloca;
   if (Ty != "int")
     Alloca = Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()),0,"iterator_variable__");
   else

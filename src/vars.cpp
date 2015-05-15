@@ -35,7 +35,7 @@ extern int lineNum;
 
 extern Module *theModule;
 extern IRBuilder<> Builder;
-map<string, AllocaInst*> NamedValues;
+map<string, Value*> NamedValues;
 PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0);
 PointerType* intPtr64 = PointerType::get(Type::getInt64Ty(getGlobalContext()), 0);
 PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);
@@ -43,7 +43,7 @@ PointerType* doublePtr = PointerType::get(Type::getDoubleTy(getGlobalContext()),
 
 void dumpVars()
 {
-  map<string,AllocaInst*>::iterator it;
+  map<string,Value*>::iterator it;
   cout << "\nDumping vars: \n";
   for(it=NamedValues.begin();it!=NamedValues.end(); it++)
   {
@@ -68,6 +68,25 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
     return Builder.CreateAlloca(intPtr8, 0, VarName.c_str());
   else if (type == "string")
     return Builder.CreateAlloca(intPtr8, 0 , VarName.c_str());
+  return 0;
+}
+
+static Value* CreateEntryBlockGlobal(const string &VarName, string type) 
+{
+  if (type == "double")
+    return new GlobalVariable(Type::getDoubleTy(getGlobalContext()),false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+  else if (type == "doubles")
+    return new GlobalVariable(doublePtr,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+  else if (type == "int")
+    return new GlobalVariable(Type::getInt32Ty(getGlobalContext()),false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+  else if (type == "ints")
+    return new GlobalVariable(intPtr32,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+  else if (type == "char")
+    return new GlobalVariable(Type::getInt8Ty(getGlobalContext()),false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+  else if (type == "chars")
+    return new GlobalVariable(intPtr8,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+  else if (type == "string")
+    return new GlobalVariable(intPtr8,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
   return 0;
 }
 
@@ -112,6 +131,59 @@ Value* VariableExprAST::Codegen()
   return Builder.CreateLoad(V, Name);
 }
 
+Value* globalVarExprAST::Codegen()
+{
+  if (NamedValues.find(Name) == NamedValues.end())
+  {
+    Value* Alloca;
+    Value* Initial;
+    if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
+    {
+      //get the size of the array
+      int arrSize = dynamic_cast<IntExprAST*>(arrayIdx)->Val;  
+      //store the size into a an llvm int
+      Value* size = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),arrSize);
+      //create teh type for an array
+      ArrayType* ArrayTy = ArrayType::get(Type::getInt32Ty(getGlobalContext()), arrSize);
+      //Allocate the array??
+      Alloca = new GlobalVariable(ArrayTy,false,GlobalValue::WeakAnyLinkage,nullptr,Name);
+      //store the alloca in the symbol table
+      NamedValues[Name] = Alloca;
+      //return the alloca
+      return Alloca;
+    }
+    if(Initd) //if initialized
+      Initial = Initd->Codegen();
+    else
+    {
+      if (Type == "double")
+        Initial = ConstantFP::get(Type::getDoubleTy(getGlobalContext()),0.0);
+      else if (Type == "doubles")
+        Initial = ConstantPointerNull::get(doublePtr);
+      else if (Type == "int")
+        Initial = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+      else if (Type == "ints")
+        Initial = ConstantPointerNull::get(intPtr32);
+      else if (Type == "char")
+        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
+      else if (Type == "chars")
+        Initial = ConstantPointerNull::get(intPtr8);
+      else if (Type == "string")
+        Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
+    }
+    Alloca = CreateEntryBlockGlobal(Name,Type);
+    NamedValues[Name] = Alloca;
+    return Builder.CreateStore(Initial,Alloca);
+  }
+  else
+  {
+#ifdef DEBUG
+    dumpVars();
+#endif
+    cerr << "\033[31m ERROR: \033[37m Variable already exists: " << Name << endl;
+    exit(EXIT_FAILURE);
+  }
+}
 
 Value* VarInitExprAST::Codegen()
 {
