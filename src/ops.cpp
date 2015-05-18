@@ -95,13 +95,19 @@ Value* BinaryExprAST::Codegen()
 
     string lty = LHS->getType();
     string rty = RHS->getType();
+
     if (lty == "int" && rty == "double")
       R = Builder.CreateFPToSI(R,Type::getInt32Ty(getGlobalContext()));
     else if (lty == "double" && rty == "int")
       R = Builder.CreateSIToFP(R,Type::getDoubleTy(getGlobalContext()));
-    else if (lty == "intArray" || lty == "doubleArray" || lty == "charArray")
+    if (lty == "intArray" && rty == "double")
+      R = Builder.CreateFPToSI(R,Type::getInt32Ty(getGlobalContext()));
+    else if (lty == "doubleArray" && rty == "int")
+      R = Builder.CreateSIToFP(R,Type::getDoubleTy(getGlobalContext())); 
+
+    if (lty == "intArray" || lty == "doubleArray" || lty == "charArray")
       return Builder.CreateStore(R,L);
-    else if (lty == "ints" || lty == "doubles" || lty == "chars")
+    if (lty == "ints" || lty == "doubles" || lty == "chars")
       return Builder.CreateStore(R,L);
     return Builder.CreateStore(R,Variable);
   }

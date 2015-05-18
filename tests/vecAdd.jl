@@ -12,16 +12,16 @@ func main() -> int
     a[i] = sin(i) * sin(i)
     b[i] = cos(i) * cos(i)
   }
-
   for i=0,val {
-    c[i] = a[i] + b[i]
+    c[i] = @a[i] + @b[i]
+    int asdf
   }
-  double sum = 0
+  double sum = 0.0
   for i=0,val {
     sum = sum + c[i]
   }
 
-  sum = sum/n
+  sum = sum/100000.0
 
   printf("Final result: %f ",sum)
   1
