@@ -1,3 +1,15 @@
+extern func malloc(int a) -> double^;
+
+func dallocate(int a) -> double^ {
+  malloc(a)
+}
+
+extern func malloc(int a) -> int^;
+
+func iallocate(int a) -> int^ {
+  malloc(a)
+}
+
 extern func putchar(char putcharCharacter) -> int;
 extern func printf(string fmt, double a) -> int;
 extern func puts(string str) -> int;

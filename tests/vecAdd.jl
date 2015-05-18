@@ -3,9 +3,9 @@ import stdio;
 func main() -> int
 {
   int n = 100000
-  double^ a = malloc(8*n)
-  double^ b = malloc(8*n)
-  double^ c = malloc(8*n)
+  double^ a = dallocate(8*n)
+  double^ b = dallocate(8*n)
+  double^ c = dallocate(8*n)
   int i
   int val = n-1
   for i=0,val {
