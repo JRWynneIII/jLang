@@ -3,6 +3,7 @@
 #define TREE_H
 #include<iostream>
 #include<map>
+#include<utility>
 #include<vector>
 #include<stdlib.h>
 #include "llvm/Analysis/Passes.h"
@@ -188,6 +189,12 @@ public:
   string getRHSVar() { return dynamic_cast<VariableExprAST*>(RHS)->getName(); }
   virtual string getName() { return Var; }
   virtual Value *Codegen();
+private:
+  bool checkTypes();  //Checks if the types match
+  pair<Value*,Value*> convertOperands();  //Will up/downconvert types as nessicary
+  bool isPtrOp();   //Returns true if the operation involves pointers
+  Value* doOp();
+  Value* doPtrOp();
 };
 
 class UnaryExprAST : public ExprAST

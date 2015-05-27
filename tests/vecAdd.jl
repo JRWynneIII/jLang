@@ -3,9 +3,9 @@ import stdio;
 func main() -> int
 {
   int n = 100000
-  double^ a = dallocate(8*n)
-  double^ b = dallocate(8*n)
-  double^ c = dallocate(8*n)
+  double^ a = dallocate(n)
+  double^ b = dallocate(n)
+  double^ c = dallocate(n)
   int i
   int val = n-1
   for i=0,val {
@@ -14,7 +14,6 @@ func main() -> int
   }
   for i=0,val {
     c[i] = @a[i] + @b[i]
-    int asdf
   }
   double sum = 0.0
   for i=0,val {

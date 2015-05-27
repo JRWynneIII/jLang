@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include<stdio.h>
+#include<utility>
 #include<stdlib.h>
 #include "jlang.tab.hpp"
 #include "tree.h"
@@ -39,6 +40,41 @@ extern PointerType* intPtr32;
 extern PointerType* intPtr8;
 extern PointerType* doublePtr;
 extern void dumpVars();
+
+//Returns true iff the types of the operands are ==
+bool BinaryExprAST::checkTypes()
+{
+  string rty = RHS->getType();
+  string lty = LHS->getType();
+  if (lty == rty)
+    return true;
+  else
+    return  false;
+}
+
+//attempts to upconvert one of the operands so that they are ==
+pair<Value*,Value*> BinaryExprAST::convertOperands()
+{
+  
+}
+
+//returns true iff one of the operands is a pointer (NOT A ARRAY REF)
+bool BinaryExprAST::isPtrOp()
+{
+
+}
+
+//Performs the binary operation
+Value* BinaryExprAST::doOp()
+{
+
+}
+
+//Performs the binary operation iff it involves pointers
+Value* BinaryExprAST::doPtrOp()
+{
+
+}
 
 Value* BinaryExprAST::Codegen()
 {
