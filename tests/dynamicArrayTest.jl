@@ -2,8 +2,7 @@ import stdio;
 
 func main() -> int
 {
-  int idx = 5*4
-  int^ arr = malloc(idx)
+  int^ arr = iallocate(5)
   arr[0] = 1
   arr[1] = 2
   arr[2] = 333
