@@ -3,7 +3,6 @@
 #define TREE_H
 #include<iostream>
 #include<map>
-#include<utility>
 #include<vector>
 #include<stdlib.h>
 #include "llvm/Analysis/Passes.h"
@@ -180,6 +179,8 @@ class BinaryExprAST : public ExprAST
 {
   char Op;
   ExprAST *LHS, *RHS;
+  Value* L, *R;
+  string lty, rty;
   string Var;
 public:
   BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs) : Op(op), LHS(lhs), RHS(rhs) {}
@@ -191,10 +192,12 @@ public:
   virtual Value *Codegen();
 private:
   bool checkTypes();  //Checks if the types match
-  pair<Value*,Value*> convertOperands();  //Will up/downconvert types as nessicary
+  void convertTypes();  //Will up/downconvert types as nessicary
   bool isPtrOp();   //Returns true if the operation involves pointers
+  bool isArrayOp();
   Value* doOp();
   Value* doPtrOp();
+  Value* doAssignmentOp();
 };
 
 class UnaryExprAST : public ExprAST
