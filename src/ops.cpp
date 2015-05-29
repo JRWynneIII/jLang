@@ -149,7 +149,6 @@ Value* BinaryExprAST::doOp()
       else
         return Builder.CreateUDiv(L, R, "addtmp");
     case '<':
-      cout << isInt << endl;
       if(!isInt) {
         L = Builder.CreateFCmpULT(L, R, "cmptmp");
         return Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()), "booltmp");
@@ -478,11 +477,7 @@ Value* UnaryExprAST::Codegen()
   Value* R = RHS->Codegen();
   if (!R)
   {
-#ifdef DEBUG
-    dumpVars();
-#endif
-      cerr << "\033[31m ERROR: \033[37m Invalid rval!: " <<  endl;
-      exit(EXIT_FAILURE);
+    ERROR("Invalid rvalue!");
   }
   
   switch(Op)
@@ -547,8 +542,6 @@ Value* UnaryExprAST::Codegen()
 
 //Value* TypeCastExprAST::Codegen() 
 //{
-//  cout << "\t" << toType << endl;
-//  cout << "\t" << typeTab[varName] << endl;
 //  if (toType == typeTab[varName])
 //    return 0;
 //  else if (toType == "int" && typeTab[varName] == "double")

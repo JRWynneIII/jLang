@@ -1,4 +1,4 @@
-#define DEBUG 1
+#define DEBUG 0
 #ifndef TREE_H
 #define TREE_H
 #include<iostream>
@@ -267,43 +267,52 @@ template <typename T, typename U>
 class SymbolTable
 {
 private:
-  map<T,U> NamedValues;
-  map<T,U> GlobalValues;
+  map<T,U> _NamedValues;
+  map<T,U> _GlobalValues;
 public:
   SymbolTable() {}
   ~SymbolTable() {}
   typedef typename std::map<T,U>::iterator iterator;
   typedef typename std::map<T,U>::const_iterator const_iterator;
-  iterator begin() { return NamedValues.begin(); }
-  const_iterator begin() const { return NamedValues.begin(); }
-  iterator end() { return GlobalValues.end(); }
-  const_iterator end() const { return GlobalValues.end(); }
+  iterator begin() { return _NamedValues.begin(); }
+  const_iterator begin() const { return _NamedValues.begin(); }
+  iterator end() { return _GlobalValues.end(); }
+  const_iterator end() const { return _GlobalValues.end(); }
   iterator find(T key) 
   {
-    if (NamedValues.find(key) == NamedValues.end())
-      return GlobalValues.find(key);
+    if (_NamedValues.find(key) == _NamedValues.end())
+      return _GlobalValues.find(key);
     else
-      return NamedValues.find(key);
+      return _NamedValues.find(key);
   }
-  void clear() { NamedValues.clear(); }
+  void clear() { _NamedValues.clear(); }
+  void addGlobal(T key, U val) { _GlobalValues[key] = val; }
   U& operator[](T key) 
   { 
-    if (NamedValues[key])
-      return NamedValues[key];
+    if (_NamedValues[key])
+      return _NamedValues[key];
     else
-      return GlobalValues[key];
+      return _GlobalValues[key];
+  }
+  U operator[] (T key) const
+  { 
+    if (_NamedValues[key])
+      return _NamedValues[key];
+    else
+      return _GlobalValues[key];
   }
   void dump()
   {
+    //THIS IS HACKY. For some reason clang won't allow map<T,U>::iterator here. Gives a missing semicolon error
     map<string,Value*>::iterator it;
     cout << "\nDumping vars: \n";
-    for(it=NamedValues.begin();it!=NamedValues.end(); it++)
+    for(it=_NamedValues.begin();it!=_NamedValues.end(); it++)
     {
       cout << it->first << ": " << it->second;
       cout << "\tType: " << typeTab[it->first] << endl;
     }
     cout << "\nDumping global vars: \n";
-    for(it=GlobalValues.begin();it!=GlobalValues.end(); it++)
+    for(it=_GlobalValues.begin();it!=_GlobalValues.end(); it++)
     {
       cout << it->first << ": " << it->second;
       cout << "\tType: " << typeTab[it->first] << endl;

@@ -121,7 +121,6 @@ Value* VariableExprAST::Codegen()
     cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
     exit(EXIT_FAILURE);
   }
-  cout << Type << endl;
   return Builder.CreateLoad(V, Name);
 }
 
@@ -140,9 +139,9 @@ Value* globalVarExprAST::Codegen()
       //create teh type for an array
       ArrayType* ArrayTy = ArrayType::get(Type::getInt32Ty(getGlobalContext()), arrSize);
       //Allocate the array??
-      Alloca = new GlobalVariable(ArrayTy,false,GlobalValue::WeakAnyLinkage,nullptr,Name);
+      Alloca = new GlobalVariable(*theModule,ArrayTy,false,GlobalValue::ExternalWeakLinkage,nullptr,Name);
       //store the alloca in the symbol table
-      NamedValues[Name] = Alloca;
+      NamedValues.addGlobal(Name, Alloca);
       //return the alloca
       return Alloca;
     }
@@ -166,7 +165,7 @@ Value* globalVarExprAST::Codegen()
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
     }
     Alloca = CreateEntryBlockGlobal(Name,Type);
-    NamedValues[Name] = Alloca;
+    NamedValues.addGlobal(Name, Alloca);
     return Builder.CreateStore(Initial,Alloca);
   }
   else
