@@ -64,14 +64,26 @@ void BinaryExprAST::convertTypes()
 {
   //TODO: Add converting from int<->char
   if (lty == "int" && rty == "double")
+  {
     L = Builder.CreateSIToFP(L, Type::getDoubleTy(getGlobalContext()));
+    return;
+  }
   else if (lty == "double" && rty == "int")
+  {
     R = Builder.CreateSIToFP(R, Type::getDoubleTy(getGlobalContext()));
+    return;
+  }
 
   if (lty == "intArray" && rty == "double")
+  {
     R = Builder.CreateFPToSI(R,Type::getInt32Ty(getGlobalContext()));
+    return;
+  }
   else if (lty == "doubleArray" && rty == "int")
+  {
     R = Builder.CreateSIToFP(R,Type::getDoubleTy(getGlobalContext())); 
+    return;
+  }
   if (this->isPtrOp() || this->isArrayOp())
     return;
   else 
@@ -430,9 +442,19 @@ Value* BinaryExprAST::Codegen()
   rty = RHS->getType();
   if (L == 0 || R == 0)
    return 0;
+
   bool isSameType = this->checkTypes();
   bool isPtrs = this->isPtrOp();
 
+  //Check LHS's value type to make sure its not a dereferenced pointer
+  Type* type = L->getType();
+  if (type != intPtr32 || type != intPtr8 || type != doublePtr)
+    isPtrs = false;
+
+  //Check RHS's value type to make sure its not a dereferenced pointer
+  type = R->getType();
+  if (type != intPtr32 || type != intPtr8 || type != doublePtr)
+    isPtrs = false;
   if (isSameType)
   {
     if (isPtrs)
@@ -485,11 +507,7 @@ Value* UnaryExprAST::Codegen()
       {
         if (typeTab[RHS->getName()] != "string" && typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars" && typeTab[RHS->getName()] != "intArray" && typeTab[RHS->getName()] != "doubleArray" && typeTab[RHS->getName()] != "charArray")
         {
-#ifdef DEBUG
-          dumpVars();
-#endif
-          cerr << "\033[31m ERROR: \033[37m Invalid rvalue (" << RHS->getName() << ") for dereference operator!" << endl;
-          exit(EXIT_FAILURE);
+          ERROR("Invalid rvalue (" + RHS->getName() + "for dereference operator!");
         }
         if (typeTab[RHS->getName()] != "intArray" && typeTab[RHS->getName()] != "doubleArray" && typeTab[RHS->getName()] != "charArray")
         {

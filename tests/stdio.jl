@@ -2,6 +2,7 @@ extern func dallocate(int a) -> double^;
 extern func iallocate(int a) -> int^;
 extern func putchar(char putcharCharacter) -> int;
 extern func printf(string fmt, int a) -> int;
+extern func printd(string fmt, double a) -> int;
 extern func puts(string str) -> int;
 extern func puts(char str) -> int;
 extern func sprintf(char^ str, string format, int i) -> int;
