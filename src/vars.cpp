@@ -68,19 +68,19 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
 static Value* CreateEntryBlockGlobal(const string &VarName, string type) 
 {
   if (type == "double")
-    return new GlobalVariable(Type::getDoubleTy(getGlobalContext()),false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, Type::getDoubleTy(getGlobalContext()),false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
   else if (type == "doubles")
-    return new GlobalVariable(doublePtr,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, doublePtr,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
   else if (type == "int")
-    return new GlobalVariable(Type::getInt32Ty(getGlobalContext()),false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, Type::getInt32Ty(getGlobalContext()),false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
   else if (type == "ints")
-    return new GlobalVariable(intPtr32,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, intPtr32,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
   else if (type == "char")
-    return new GlobalVariable(Type::getInt8Ty(getGlobalContext()),false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, Type::getInt8Ty(getGlobalContext()),false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
   else if (type == "chars")
-    return new GlobalVariable(intPtr8,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, intPtr8,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
   else if (type == "string")
-    return new GlobalVariable(intPtr8,false,GlobalValue::WeakAnyLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, intPtr8,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
   return 0;
 }
 
@@ -139,7 +139,7 @@ Value* globalVarExprAST::Codegen()
       //create teh type for an array
       ArrayType* ArrayTy = ArrayType::get(Type::getInt32Ty(getGlobalContext()), arrSize);
       //Allocate the array??
-      Alloca = new GlobalVariable(*theModule,ArrayTy,false,GlobalValue::ExternalWeakLinkage,nullptr,Name);
+      Alloca = new GlobalVariable(ArrayTy,false,GlobalValue::WeakAnyLinkage,nullptr,Name);
       //store the alloca in the symbol table
       NamedValues.addGlobal(Name, Alloca);
       //return the alloca
