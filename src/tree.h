@@ -293,6 +293,21 @@ public:
     else
       return GlobalValues[key];
   }
-  
+  void dump()
+  {
+    map<string,Value*>::iterator it;
+    cout << "\nDumping vars: \n";
+    for(it=NamedValues.begin();it!=NamedValues.end(); it++)
+    {
+      cout << it->first << ": " << it->second;
+      cout << "\tType: " << typeTab[it->first] << endl;
+    }
+    cout << "\nDumping global vars: \n";
+    for(it=GlobalValues.begin();it!=GlobalValues.end(); it++)
+    {
+      cout << it->first << ": " << it->second;
+      cout << "\tType: " << typeTab[it->first] << endl;
+    }
+  }
 };
 #endif

@@ -43,13 +43,7 @@ PointerType* doublePtr = PointerType::get(Type::getDoubleTy(getGlobalContext()),
 
 void dumpVars()
 {
-  map<string,Value*>::iterator it;
-  cout << "\nDumping vars: \n";
-  for(it=NamedValues.begin();it!=NamedValues.end(); it++)
-  {
-    cout << it->first << ": " << it->second;
-    cout << "\tType: " << typeTab[it->first] << endl;
-  }
+  NamedValues.dump();
 }
 
 static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type) 
