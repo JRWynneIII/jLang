@@ -262,4 +262,37 @@ public:
 
 void createExtern(PrototypeAST* P);
 void loadModule(const char* name);
+
+template <typename T, typename U>
+class SymbolTable
+{
+private:
+  map<T,U> NamedValues;
+  map<T,U> GlobalValues;
+public:
+  SymbolTable() {}
+  ~SymbolTable() {}
+  typedef typename std::map<T,U>::iterator iterator;
+  typedef typename std::map<T,U>::const_iterator const_iterator;
+  iterator begin() { return NamedValues.begin(); }
+  const_iterator begin() const { return NamedValues.begin(); }
+  iterator end() { return GlobalValues.end(); }
+  const_iterator end() const { return GlobalValues.end(); }
+  iterator find(T key) 
+  {
+    if (NamedValues.find(key) == NamedValues.end())
+      return GlobalValues.find(key);
+    else
+      return NamedValues.find(key);
+  }
+  void clear() { NamedValues.clear(); }
+  U& operator[](T key) 
+  { 
+    if (NamedValues[key])
+      return NamedValues[key];
+    else
+      return GlobalValues[key];
+  }
+  
+};
 #endif

@@ -21,7 +21,7 @@ extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
 extern int lineNum;
-extern map<string, Value*> NamedValues;
+extern SymbolTable<string, Value*> NamedValues;
 using namespace std;
 void yyerror(char const *s) 
 { 

@@ -33,7 +33,7 @@ IRBuilder<> Builder(getGlobalContext());
 extern FILE* yyin;
 extern vector<ExprAST*>* lines;
 Module *theModule;
-extern map<string, Value*> NamedValues;
+extern SymbolTable<string, Value*> NamedValues;
 extern FunctionPassManager *theFPM;
 
 int main(int argc, char*argv[])

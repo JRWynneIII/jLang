@@ -24,7 +24,6 @@
 using namespace std;
 using namespace llvm;
 
-
 void createExtern(PrototypeAST* P)
 {
   Function* func = P->Codegen();
@@ -43,7 +42,7 @@ extern int YY_FLUSH_BUFFER;
 extern vector<ExprAST*>* lines;
 extern YY_BUFFER_STATE getCurBuf();
 extern Module *theModule;
-extern map<string, Value*> NamedValues;
+extern SymbolTable<string, Value*> NamedValues;
 
 void loadModule(const char* name)
 {

@@ -35,7 +35,7 @@ extern int lineNum;
 
 extern Module *theModule;
 extern IRBuilder<> Builder;
-map<string, Value*> NamedValues;
+SymbolTable<string, Value*> NamedValues;
 PointerType* intPtr32 = PointerType::get(Type::getInt32Ty(getGlobalContext()), 0);
 PointerType* intPtr64 = PointerType::get(Type::getInt64Ty(getGlobalContext()), 0);
 PointerType* intPtr8 = PointerType::get(Type::getInt8Ty(getGlobalContext()), 0);
