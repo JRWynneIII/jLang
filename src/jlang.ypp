@@ -141,8 +141,8 @@ expressions: expressions expression
            | expression { $$ = $1; }
 
 expression: varDef  { lines->push_back($1); }
-          | modImport { loadModule($1); lineNum=0; }
           | globalDef { lines->push_back($1); }
+          | modImport { loadModule($1); lineNum=0; }
           | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | kernelDef { KernelAST* tmp = new KernelAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | forLoop { lines->push_back($1); }
@@ -185,10 +185,10 @@ varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL unaryOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
       | dataType LSBRACE numVal RSBRACE ID { string str($1); str += "Array"; typeTab[$5] = str; $$ = new VarInitExprAST($5,str.c_str(),NULL,$3);  }
 
-globalDef: GLOBAL dataType ID { $$ = new globalVarExprAST($3,$2,NULL); typeTab[$3] = $2; }
-         | GLOBAL dataType ID EQUAL binOp { $$ = new globalVarExprAST($3,$2,$5); typeTab[$3] = $2; }
-         | GLOBAL dataType ID EQUAL unaryOp { $$ = new globalVarExprAST($3,$2,$5); typeTab[$3] = $2; }
-         | GLOBAL dataType LSBRACE numVal RSBRACE ID { string str($2); str += "Array"; typeTab[$6] = str; $$ = new globalVarExprAST($6,str.c_str(), NULL,$4); }
+globalDef: GLOBAL dataType ID SEMICOLON { cout << "GLOBAL" << endl; $$ = new globalVarExprAST($3,$2,NULL); typeTab[$3] = $2; }
+         | GLOBAL dataType ID EQUAL binOp SEMICOLON { $$ = new globalVarExprAST($3,$2,$5); typeTab[$3] = $2; }
+         | GLOBAL dataType ID EQUAL unaryOp SEMICOLON { $$ = new globalVarExprAST($3,$2,$5); typeTab[$3] = $2; }
+         | GLOBAL dataType LSBRACE numVal RSBRACE ID SEMICOLON { string str($2); str += "Array"; typeTab[$6] = str; $$ = new globalVarExprAST($6,str.c_str(), NULL,$4); }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
