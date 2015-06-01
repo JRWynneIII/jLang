@@ -65,22 +65,22 @@ static AllocaInst *CreateEntryBlockAlloca(const string &VarName, string type)
   return 0;
 }
 
-static Value* CreateEntryBlockGlobal(const string &VarName, string type) 
+static GlobalVariable* CreateGlobalAlloca(const string &VarName, string type) 
 {
   if (type == "double")
-    return new GlobalVariable(*theModule, Type::getDoubleTy(getGlobalContext()),false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, Type::getDoubleTy(getGlobalContext()),false,GlobalValue::ExternalLinkage,nullptr,VarName);
   else if (type == "doubles")
-    return new GlobalVariable(*theModule, doublePtr,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, doublePtr,false,GlobalValue::ExternalLinkage,nullptr,VarName);
   else if (type == "int")
-    return new GlobalVariable(*theModule, Type::getInt32Ty(getGlobalContext()),false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, Type::getInt32Ty(getGlobalContext()),false,GlobalValue::ExternalLinkage,nullptr,VarName);
   else if (type == "ints")
-    return new GlobalVariable(*theModule, intPtr32,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, intPtr32,false,GlobalValue::ExternalLinkage,nullptr,VarName);
   else if (type == "char")
-    return new GlobalVariable(*theModule, Type::getInt8Ty(getGlobalContext()),false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, Type::getInt8Ty(getGlobalContext()),false,GlobalValue::ExternalLinkage,nullptr,VarName);
   else if (type == "chars")
-    return new GlobalVariable(*theModule, intPtr8,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, intPtr8,false,GlobalValue::ExternalLinkage,nullptr,VarName);
   else if (type == "string")
-    return new GlobalVariable(*theModule, intPtr8,false,GlobalValue::ExternalWeakLinkage,nullptr,VarName);
+    return new GlobalVariable(*theModule, intPtr8,false,GlobalValue::ExternalLinkage,nullptr,VarName);
   return 0;
 }
 
@@ -128,7 +128,7 @@ Value* globalVarExprAST::Codegen()
 {
   if (NamedValues.find(Name) == NamedValues.end())
   {
-    Value* Alloca;
+    GlobalVariable* Alloca;
     Value* Initial;
     if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
     {
@@ -146,7 +146,7 @@ Value* globalVarExprAST::Codegen()
       return Alloca;
     }
     if(Initd) //if initialized
-      Initial = Initd->Codegen();
+     Initial = Initd->Codegen();
     else
     {
       if (Type == "double")
@@ -164,7 +164,8 @@ Value* globalVarExprAST::Codegen()
       else if (Type == "string")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
     }
-    Alloca = CreateEntryBlockGlobal(Name,Type);
+    Alloca = CreateGlobalAlloca(Name,Type);
+    Alloca->setInitializer(dyn_cast<Constant>(Initial));
     NamedValues.addGlobal(Name, Alloca);
     return Builder.CreateStore(Initial,Alloca);
   }
