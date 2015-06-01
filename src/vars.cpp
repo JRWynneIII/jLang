@@ -130,21 +130,6 @@ Value* globalVarExprAST::Codegen()
   {
     GlobalVariable* Alloca;
     Value* Initial;
-    if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
-    {
-      //get the size of the array
-      int arrSize = dynamic_cast<IntExprAST*>(arrayIdx)->Val;  
-      //store the size into a an llvm int
-      Value* size = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),arrSize);
-      //create teh type for an array
-      ArrayType* ArrayTy = ArrayType::get(Type::getInt32Ty(getGlobalContext()), arrSize);
-      //Allocate the array??
-      Alloca = new GlobalVariable(ArrayTy,false,GlobalValue::WeakAnyLinkage,nullptr,Name);
-      //store the alloca in the symbol table
-      NamedValues.addGlobal(Name, Alloca);
-      //return the alloca
-      return Alloca;
-    }
     if(Initd) //if initialized
      Initial = Initd->Codegen();
     else
@@ -163,11 +148,28 @@ Value* globalVarExprAST::Codegen()
         Initial = ConstantPointerNull::get(intPtr8);
       else if (Type == "string")
         Initial = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), 0);
+      Alloca = CreateGlobalAlloca(Name,Type);
+      Alloca->setInitializer(dyn_cast<Constant>(Initial));
+      NamedValues.addGlobal(Name, Alloca);
+      return Builder.CreateStore(Initial,Alloca);
     }
-    Alloca = CreateGlobalAlloca(Name,Type);
-    Alloca->setInitializer(dyn_cast<Constant>(Initial));
-    NamedValues.addGlobal(Name, Alloca);
-    return Builder.CreateStore(Initial,Alloca);
+    if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
+    {
+      //get the size of the array
+      int arrSize = dynamic_cast<IntExprAST*>(arrayIdx)->Val;  
+      //store the size into a an llvm int
+      Value* size = ConstantInt::get(Type::getInt32Ty(getGlobalContext()),arrSize);
+      //create teh type for an array
+      ArrayType* ArrayTy = ArrayType::get(Type::getInt32Ty(getGlobalContext()), arrSize);
+      //Allocate the array??
+      Alloca = new GlobalVariable(*theModule,ArrayTy,false,GlobalValue::ExternalLinkage,nullptr,Name);
+      //set the array initializer
+      Alloca->setExternallyInitialized(false);
+      //store the alloca in the symbol table
+      NamedValues.addGlobal(Name, Alloca);
+      //return the alloca
+      return Alloca;
+    }
   }
   else
   {
@@ -198,7 +200,6 @@ Value* VarInitExprAST::Codegen()
       Alloca = Builder.CreateAlloca(ArrayTy,0);  
       //store the alloca in the symbol table
       NamedValues[Name] = Alloca;
-      Alloca->setAlignment(4);
       //return the alloca
       return Alloca;
     }
