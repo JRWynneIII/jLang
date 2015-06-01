@@ -24,6 +24,9 @@ NUMBER [0-9]+
 "return" { return RETURN; }
 "import" { return IMPORT; }
 "func" { return FUNC; }
+"method" { return METHOD; }
+"init" { return INIT; }
+"class" { return CLASS; }
 "extern" { return EXTERN; }
 "int" { return INT; }
 "double" { return DOUBLE; }

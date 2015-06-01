@@ -30,27 +30,71 @@
 using namespace std;
 using namespace llvm;
 
+extern Module* theModule;
+extern PointerType* intPtr32;
+extern PointerType* intPtr8;
+extern PointerType* doublePtr;
+Type* i32 = Type::getInt32Ty(getGlobalContext());
+Type* i8 = Type::getInt8Ty(getGlobalContext());
+Type* d64 = Type::getDoubleTy(getGlobalContext());
+
+Type* ObjectSymbolTable::getLLVMType(string key)
+{
+  string type = types[key];
+  if (type == "int")
+    return i32;
+  else if (type == "ints")
+    return intPtr32;
+  else if (type == "double")
+    return d64;
+  else if (type == "doubles")
+    return doublePtr;
+  else if (type == "char")
+    return i8;
+  else if (type == "chars")
+    return intPtr8;
+}
+
 Value* ClassAST::Codegen()
 {
   //Populate the Object's symbol table. This includes not only the variables, but methods as well
+  vector<Type*> structTys;    //Holds the LLVM::Type's for all the elements in the struct/object
   vector<FunctionAST*>::iterator it;
-  Value* Constructor = Init->Codegen();
-  symbols.addMethod(Name,Constructor);
-  for(it = FunctionList.begin(); it != FunctionList.end(); it++)
+  if(Init)
   {
-    Value* func = *it->Codegen();
-    if (!func)
-      return 0;
-    //May have to do some renameing of the function in here so it doesn't clash with other functions in IR
-    symbols.addMethod((*it)->getName(), func);
+    Value* Constructor = Init->Codegen();
+    symbols.addMethod(Name,Constructor);
   }
-  vector<ExprAST*>::iterator vi;
-  for(vi = Vars.begin(); vi != Vars.end(); vi++)
+  if(FunctionList.size() > 0)
   {
-    Value* var = (*it)->Codegen();
-    if (!var)
-      return 0;
-    //May have to do some renameing of the variables in here so it doesn't clash with other vars in the IR
-    symbols.addVar((*it)->getName(), var);
+    for(it = FunctionList.begin(); it != FunctionList.end(); it++)
+    {
+      Value* func = (*it)->Codegen();
+      if (!func)
+        return 0;
+      //May have to do some renameing of the function in here so it doesn't clash with other functions in IR
+      symbols.addMethod((*it)->getName(), func);
+    }
   }
+  vector<VarInitExprAST*>::iterator vi;
+  if(Vars.size() > 0)
+  {
+    for(vi = Vars.begin(); vi != Vars.end(); vi++)
+    {
+      string n = (*vi)->getName();
+      string t = (*vi)->getType();
+      symbols.setType(n,t);
+      Value* var = (*vi)->Codegen();
+      if (!var)
+        return 0;
+      //May have to do some renameing of the variables in here so it doesn't clash with other vars in the IR
+      symbols.addVar((*it)->getName(), var);
+      structTys.push_back(symbols.getLLVMType((*it)->getName()));
+    }
+  }
+
+  //create the type for the struct
+  StructType* structReg = StructType::create(getGlobalContext(), structTys,StringRef(Name));
+  PointerType* structRegPtr = PointerType::get(structReg,0);
+  return ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
 }

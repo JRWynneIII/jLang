@@ -62,11 +62,14 @@ void yyerror(char const *s)
   ArrayIndexAST* arr;
   nullExprAST* null;
   std::vector<ExprAST*>* blk;
+  std::vector<FunctionAST*>* funcBlk;
+  std::vector<VarInitExprAST*>* varBlk;
+  ClassAST* classNode;
 };
 
 %token NUMBER FLOAT
 %token STRING ID END CHARACTER
-%token FUNC KERNEL EXTERN FOR IF ELSE ELIF IMPORT RETURN GLOBAL
+%token FUNC KERNEL EXTERN FOR IF ELSE ELIF IMPORT RETURN GLOBAL CLASS METHOD INIT
 %token INT DOUBLE CHAR STR
 %token RARROW LARROW CAROT
 %token EQUAL COMPEQUAL GT LT GTE LTE NEQUAL PLUS MINUS MUL DIV MOD EMARK QMARK AND OR LSBRACE RSBRACE LPAREN RPAREN LBRACE RBRACE AT DOT COMMA COLON SEMICOLON
@@ -94,6 +97,9 @@ void yyerror(char const *s)
 %type <strVal> DOT
 %type <strVal> EQUAL
 %type <strVal> FUNC
+%type <strVal> CLASS
+%type <strVal> METHOD
+%type <strVal> INIT
 %type <strVal> IMPORT 
 %type <strVal> EXTERN
 %type <strVal> GLOBAL
@@ -132,6 +138,13 @@ void yyerror(char const *s)
 %type <strVal> modImport
 %type <arr> array
 %type <glob> globalDef
+%type <classNode> classDef
+%type <varBlk> classVars
+%type <varInit> classVar
+%type <funcBlk> classMethods
+%type <fdef> classMethod
+%type <fdef> classInit
+
 %start program
 
 %%
@@ -142,6 +155,7 @@ expressions: expressions expression
 
 expression: varDef  { lines->push_back($1); }
           | globalDef { lines->push_back($1); }
+          | classDef { lines->push_back($1); }
           | modImport { loadModule($1); lineNum=0; }
           | funcDef  { FunctionAST* tmp = new FunctionAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
           | kernelDef { KernelAST* tmp = new KernelAST($1,*lines); lines = parseStack.top(); parseStack.pop(); lines->push_back(tmp); NamedValues.clear(); }
@@ -180,6 +194,29 @@ pointerType: INT CAROT { $$ = "ints"; }
            | DOUBLE CAROT { $$ = "doubles"; }
            | CHAR CAROT { $$ = "chars"; }
 
+classVars: classVars classVar { $$->push_back($2); }
+             | classVar { $$->push_back($1); }
+
+classVar: varDef { $$ = $1; }
+
+paramDefs: paramDefs COMMA paramDef
+         | paramDef 
+
+paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); }
+
+classMethods: classMethods classMethod { $$->push_back($2); }
+            | classMethod { $$->push_back($1); }
+
+classMethod: METHOD ID LPAREN paramDefs RPAREN block
+           | METHOD ID LPAREN RPAREN block 
+
+classInit: INIT LPAREN paramDefs RPAREN block
+         | INIT LPAREN RPAREN block
+
+classDef: CLASS ID LBRACE classInit classVars classMethods RBRACE { $$ = new ClassAST($2,$4,*$5,*$6); }
+        | CLASS ID LBRACE classVars RBRACE  { vector<FunctionAST*> a; $$ = new ClassAST($2,NULL,*$4, a); }
+        | CLASS ID LBRACE classInit classMethods { vector<VarInitExprAST*> a; $$ = new ClassAST($2,$4, a,*$5); }
+
 varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
       | dataType ID EQUAL unaryOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }
@@ -190,10 +227,6 @@ globalDef: GLOBAL dataType ID SEMICOLON { $$ = new globalVarExprAST($3,$2,NULL);
          | GLOBAL dataType ID EQUAL unaryOp SEMICOLON { $$ = new globalVarExprAST($3,$2,$5); typeTab[$3] = $2; }
          | GLOBAL dataType LSBRACE numVal RSBRACE ID SEMICOLON { string str($2); str += "Array"; typeTab[$6] = str; $$ = new globalVarExprAST($6,str.c_str(), NULL,$4); }
 
-paramDefs: paramDefs COMMA paramDef
-         | paramDef 
-
-paramDef: dataType ID { VarInitExprAST* temp = new VarInitExprAST($2,$1,NULL); args.push_back(temp); }
 
 openBlock: LBRACE {  parseStack.push(lines); lines = new vector<ExprAST*>(); } 
 

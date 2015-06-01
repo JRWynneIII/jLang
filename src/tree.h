@@ -310,6 +310,7 @@ class ObjectSymbolTable
 private:
   SymbolTable<string,Value*> Vars;
   map<string,Value*> methodTable;
+  map<string,string> types;
 public:
   ObjectSymbolTable() {}
   ~ObjectSymbolTable() {}
@@ -318,6 +319,9 @@ public:
   void addMethod(string key, Value* method) { methodTable[key] = method; }
   void addVar(string key, Value* var) { Vars[key] = var; }
   void addObjectGlobal(string key, Value* var) { Vars.addGlobal(key,var); }
+  string getType(string key) { return types[key]; }
+  Type*  getLLVMType(string key);
+  void setType(string key, string type) { types[key] = type; }
   Value* operator[](string key)
   {
     if(Vars[key])
@@ -329,16 +333,18 @@ public:
 
 class ClassAST : public ExprAST
 {
-private:
   string Name;
   FunctionAST* Init;
   vector<FunctionAST*> FunctionList;
+  vector<VarInitExprAST*> Vars;
   ObjectSymbolTable symbols;
 public:
+  ClassAST(string name, FunctionAST* init, vector<VarInitExprAST*> vars, vector<FunctionAST*> functionlist) : Name(name), Init(init), Vars(vars), FunctionList(functionlist) {}
+  ~ClassAST() {}
   virtual string getType() { return Name; }
   virtual string getName() { return Name; }
   virtual Value* Codegen();
-}
+};
 
 class KernelAST : public ExprAST
 {

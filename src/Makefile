@@ -1,4 +1,4 @@
-SRC= handler.cpp jlang.tab.cpp lex.yy.c vars.cpp loops.cpp functions.cpp ops.cpp main.cpp 
+SRC= classes.cpp handler.cpp jlang.tab.cpp lex.yy.c vars.cpp loops.cpp functions.cpp ops.cpp main.cpp 
 all: jlangc
 
 jlangc: ${SRC} 
