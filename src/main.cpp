@@ -54,8 +54,7 @@ int main(int argc, char*argv[])
     cur = (*it)->Codegen();
     if(!cur)
     {
-      cerr << "\033[31m INTERNAL ERROR: \033[37m Error in reading AST " << endl;
-      exit(EXIT_FAILURE);
+      ERROR("Error in reading AST!");
     }
   }
 

@@ -64,19 +64,11 @@ Value* CallExprAST::Codegen()
   Function* CalleeF = theModule->getFunction(Callee);
   if (CalleeF == 0)
   {
-#ifdef DEBUG
-    dumpVars();
-#endif
-    cerr << "\033[31m ERROR: \033[37m Unknown Function Reference" << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Unknown Function Reference");
   }
   if (CalleeF->arg_size() != Args.size())
   {
-#ifdef DEBUG
-    dumpVars();
-#endif
-    cerr << "\033[31m ERROR: \033[37m Incorrect number of arguements" << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Incorrect number of arguements");
   }
   vector<Value*> ArgsV;
   for (unsigned i = 0, e = Args.size(); i != e; ++i)
@@ -176,20 +168,12 @@ Function* PrototypeAST::Codegen()
 
     if(!F->empty())
     {
-#ifdef DEBUG
-    dumpVars();
-#endif
-      cerr << "\033[31m ERROR: \033[37m Redfinition of Function" << endl;
-      exit(EXIT_FAILURE);
+      ERROR("Redefinition of function");
     }
 
     if(F->arg_size() != Args.size())
     {
-#ifdef DEBUG
-    dumpVars();
-#endif
-      cerr << "\033[31m ERROR: \033[37m Incorrect number of arguments for Function" << endl;
-      exit(EXIT_FAILURE);
+      ERROR("Incorrect number of arguements for function");
     }
   }
 

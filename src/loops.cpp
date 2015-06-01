@@ -51,9 +51,6 @@ Value* ForExprAST::Codegen()
     Alloca = Builder.CreateAlloca(Type::getInt32Ty(getGlobalContext()),0,"iterator_variable__");
   else
     Alloca = NamedValues[VarName];
-#ifdef DEBUG
-  dumpVars();
-#endif
   Value *StartVal;
   StartVal = Start->Codegen();
   if (Ty != "int")

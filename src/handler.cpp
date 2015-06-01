@@ -29,8 +29,7 @@ void createExtern(PrototypeAST* P)
   Function* func = P->Codegen();
   if(!func)
   {
-    cerr << "\033[31m ERROR: \033[37m Error in declaring extern " << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Error in declaring extern");
   }
 #ifdef DEBUG
   func->dump();
@@ -53,8 +52,7 @@ void loadModule(const char* name)
   FILE* newBuf;
   if(!(newBuf = fopen(modName.c_str(),"r")))
   {
-    cerr << "\033[31m ERROR: \033[37m Can not read module "<< name << "!" << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Can not read module " + string(name));
   }
   YY_BUFFER_STATE modFile = yy_create_buffer(newBuf,YY_BUF_SIZE);
   yy_switch_to_buffer(modFile);
@@ -66,8 +64,7 @@ void loadModule(const char* name)
     cur = (*it)->Codegen();
     if(!cur)
     {
-      cerr << "\033[31m INTERNAL ERROR: \033[37m Error in reading AST in module " << name << endl;
-      exit(EXIT_FAILURE);
+      ERROR("Error in reading AST  in module " + string(name));
     }
   }
   lines->clear();

@@ -115,11 +115,7 @@ Value* VariableExprAST::Codegen()
   Value* V = NamedValues[Name];
   if (V == 0)
   {
-#ifdef DEBUG
-    dumpVars();
-#endif
-    cerr << "\033[31m ERROR: \033[37m Unknown Variable Reference: " << Name << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Unknown Variable Reference: " + Name);
   }
   return Builder.CreateLoad(V, Name);
 }
@@ -173,11 +169,7 @@ Value* globalVarExprAST::Codegen()
   }
   else
   {
-#ifdef DEBUG
-    dumpVars();
-#endif
-    cerr << "\033[31m ERROR: \033[37m Variable already exists: " << Name << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Variable already exists: " + Name);
   }
 }
 
@@ -228,11 +220,7 @@ Value* VarInitExprAST::Codegen()
   }
   else
   {
-#ifdef DEBUG
-    dumpVars();
-#endif
-    cerr << "\033[31m ERROR: \033[37m Variable already exists: " << Name << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Variable already exists: " + Name);
   }
 }
 
@@ -251,11 +239,7 @@ Value* ArrayIndexAST::Codegen()
   }
   if (rtype != "intArray" && rtype != "doubleArray" && rtype != "charArray" && rtype != "ints" && rtype != "doubles" && rtype != "chars")
   {
-#ifdef DEBUG
-    dumpVars();
-#endif
-    cerr << "\033[31m ERROR: \033[37m Variable is not an array: " << Var->getName() << endl;
-    exit(EXIT_FAILURE);
+    ERROR("Variable is not an array: " + Var->getName());
   }
   else
   {

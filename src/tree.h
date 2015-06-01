@@ -248,21 +248,6 @@ public:
   Function *Codegen();
 };
 
-class KernelAST : public ExprAST
-{
-  PrototypeAST *Proto;
-  vector<ExprAST*> Body;
-public:
-  KernelAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
-  virtual string getType() { return Proto->getType(); }
-  virtual string getName() { return Proto->getName(); }
-  
-  Function *Codegen();
-};
-
-void createExtern(PrototypeAST* P);
-void loadModule(const char* name);
-
 template <typename T, typename U>
 class SymbolTable
 {
@@ -286,6 +271,7 @@ public:
       return _NamedValues.find(key);
   }
   void clear() { _NamedValues.clear(); }
+  void clearAll() { this->clear(); _GlobalValues.clear(); }
   void addGlobal(T key, U val) { _GlobalValues[key] = val; }
   U& operator[](T key) 
   { 
@@ -319,4 +305,55 @@ public:
     }
   }
 };
+class ObjectSymbolTable
+{
+private:
+  SymbolTable<string,Value*> Vars;
+  map<string,Value*> methodTable;
+public:
+  ObjectSymbolTable() {}
+  ~ObjectSymbolTable() {}
+  void clear() { Vars.clear(); }
+  void clearAll() { Vars.clearAll();  methodTable.clear(); }
+  void addMethod(string key, Value* method) { methodTable[key] = method; }
+  void addVar(string key, Value* var) { Vars[key] = var; }
+  void addObjectGlobal(string key, Value* var) { Vars.addGlobal(key,var); }
+  Value* operator[](string key)
+  {
+    if(Vars[key])
+      return Vars[key];
+    else
+      return methodTable[key];
+  }
+};
+
+class ClassAST : public ExprAST
+{
+private:
+  string Name;
+  FunctionAST* Init;
+  vector<FunctionAST*> FunctionList;
+  ObjectSymbolTable symbols;
+public:
+  virtual string getType() { return Name; }
+  virtual string getName() { return Name; }
+  virtual Value* Codegen();
+}
+
+class KernelAST : public ExprAST
+{
+  PrototypeAST *Proto;
+  vector<ExprAST*> Body;
+public:
+  KernelAST(PrototypeAST *proto, vector<ExprAST*> body) : Proto(proto), Body(body) {}
+  virtual string getType() { return Proto->getType(); }
+  virtual string getName() { return Proto->getName(); }
+  
+  Function *Codegen();
+};
+
+void createExtern(PrototypeAST* P);
+void loadModule(const char* name);
+void ERROR(string err);
+
 #endif
