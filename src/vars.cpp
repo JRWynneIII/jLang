@@ -178,7 +178,6 @@ Value* VarInitExprAST::Codegen()
   if (NamedValues.find(Name) == NamedValues.end())
   {
     AllocaInst* Alloca;
-    Function* F = Builder.GetInsertBlock()->getParent();
     Value* Initial;
     if (Type == "intArray" || Type == "doubleArray" || Type == "charArray")
     {

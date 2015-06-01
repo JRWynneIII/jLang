@@ -17,6 +17,7 @@ std::vector<ExprAST*> topLevel;
 std::vector<ExprAST*>* lines = &topLevel;
 std::vector<ExprAST*> tmpLines;
 std::vector<ExprAST*> callArgs;
+std::vector<VarInitExprAST*> classVarStmts;
 extern int yylex(void);
 extern void storeVar(char*,double);
 extern void storeStringVar(char*,char*);
@@ -194,10 +195,10 @@ pointerType: INT CAROT { $$ = "ints"; }
            | DOUBLE CAROT { $$ = "doubles"; }
            | CHAR CAROT { $$ = "chars"; }
 
-classVars: classVars classVar { $$->push_back($2); }
-             | classVar { $$->push_back($1); }
+classVars: classVars classVar 
+         | classVar 
 
-classVar: varDef { $$ = $1; }
+classVar: varDef { classVarStmts.push_back($1); }
 
 paramDefs: paramDefs COMMA paramDef
          | paramDef 
@@ -213,8 +214,8 @@ classMethod: METHOD ID LPAREN paramDefs RPAREN block
 classInit: INIT LPAREN paramDefs RPAREN block
          | INIT LPAREN RPAREN block
 
-classDef: CLASS ID LBRACE classInit classVars classMethods RBRACE { $$ = new ClassAST($2,$4,*$5,*$6); }
-        | CLASS ID LBRACE classVars RBRACE  { vector<FunctionAST*> a; $$ = new ClassAST($2,NULL,*$4, a); }
+classDef: CLASS ID LBRACE classInit classVars classMethods RBRACE { $$ = new ClassAST($2,$4,classVarStmts,*$6); classVarStmts.clear(); }
+        | CLASS ID LBRACE classVars RBRACE  { vector<FunctionAST*> a; $$ = new ClassAST($2,NULL,classVarStmts, a); classVarStmts.clear(); }
         | CLASS ID LBRACE classInit classMethods { vector<VarInitExprAST*> a; $$ = new ClassAST($2,$4, a,*$5); }
 
 varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }

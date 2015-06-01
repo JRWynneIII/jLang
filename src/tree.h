@@ -346,6 +346,17 @@ public:
   virtual Value* Codegen();
 };
 
+class ObjectInitAST : public ExprAST
+{
+  string Name;
+  string Object;
+public:
+  ObjectInitAST(string object, string name) : Name(name), Object(object) {}
+  virtual string getType() { return Object; }
+  virtual string getName() { return Name; }
+  virtual Value* Codegen();
+};
+
 class KernelAST : public ExprAST
 {
   PrototypeAST *Proto;

@@ -1,5 +1,3 @@
-import stdio;
-
 class test
 {
   int a
