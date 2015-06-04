@@ -5,5 +5,6 @@ class test
 
 func main() -> int
 {
-1
+  test obj
+  1
 }

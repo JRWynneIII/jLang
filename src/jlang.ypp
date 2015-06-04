@@ -66,6 +66,7 @@ void yyerror(char const *s)
   std::vector<FunctionAST*>* funcBlk;
   std::vector<VarInitExprAST*>* varBlk;
   ClassAST* classNode;
+  ObjectInitAST* obj;
 };
 
 %token NUMBER FLOAT
@@ -145,6 +146,7 @@ void yyerror(char const *s)
 %type <funcBlk> classMethods
 %type <fdef> classMethod
 %type <fdef> classInit
+%type <obj> objectDeclare
 
 %start program
 
@@ -165,6 +167,7 @@ expression: varDef  { lines->push_back($1); }
           | funcCall  { lines->push_back($1); }
           | ifBranch  { lines->push_back($1);}
           | binOp  { lines->push_back($1); }
+          | objectDeclare { lines->push_back($1); }
           | chara { lines->push_back($1); }
           | unaryOp {lines->push_back($1); }
           | ID  { lines->push_back(new VariableExprAST($1,typeTab[$1]));}
@@ -217,6 +220,9 @@ classInit: INIT LPAREN paramDefs RPAREN block
 classDef: CLASS ID LBRACE classInit classVars classMethods RBRACE { $$ = new ClassAST($2,$4,classVarStmts,*$6); classVarStmts.clear(); }
         | CLASS ID LBRACE classVars RBRACE  { vector<FunctionAST*> a; $$ = new ClassAST($2,NULL,classVarStmts, a); classVarStmts.clear(); }
         | CLASS ID LBRACE classInit classMethods { vector<VarInitExprAST*> a; $$ = new ClassAST($2,$4, a,*$5); }
+
+objectDeclare: ID ID { $$ = new ObjectInitAST($1,$2); }
+             | ID ID EQUAL numVal { $$ = new ObjectInitAST($1,$2,$4); }
 
 varDef: dataType ID { $$ = new VarInitExprAST($2,$1,NULL); typeTab[$2] = $1; }
       | dataType ID EQUAL binOp { $$ = new VarInitExprAST($2,$1,$4); typeTab[$2] = $1; }

@@ -350,8 +350,10 @@ class ObjectInitAST : public ExprAST
 {
   string Name;
   string Object;
+  ExprAST* Init;
 public:
   ObjectInitAST(string object, string name) : Name(name), Object(object) {}
+  ObjectInitAST(string object, string name, ExprAST* init) : Name(name), Object(object), Init(init) {}
   virtual string getType() { return Object; }
   virtual string getName() { return Name; }
   virtual Value* Codegen();

@@ -31,10 +31,12 @@ using namespace std;
 using namespace llvm;
 
 extern Module* theModule;
+extern SymbolTable<string,Value*> NamedValues;
 extern PointerType* intPtr32;
 extern PointerType* intPtr8;
 extern PointerType* doublePtr;
 extern IRBuilder<> Builder;
+map<string,StructType*> classes;
 Type* i32 = Type::getInt32Ty(getGlobalContext());
 Type* i8 = Type::getInt8Ty(getGlobalContext());
 Type* d64 = Type::getDoubleTy(getGlobalContext());
@@ -97,13 +99,17 @@ Value* ClassAST::Codegen()
   //create the type for the struct
   StructType* structReg = StructType::create(getGlobalContext(), structTys,StringRef(Name));
   PointerType* structRegPtr = PointerType::get(structReg,0);
-  typeTab[Name] = structRegPtr;
+  classes[Name] = structReg;
   return Builder.CreateAlloca(structReg);//ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
   //WHY IS NOTHING HAPPENING HERE????????????????????
 }
 
 Value* ObjectInitAST::Codegen()
 {
-  Value* alloca = Builder.CreateAlloca(typeTab[Object],0,Name.c_str());
-  return Builder.CreateStructGEP(typeTab[Object],alloca);
+  Value* alloca = Builder.CreateAlloca(classes[Object],0,Name.c_str());
+  vector<Value*> idxs;
+  Value* zero = ConstantInt::get(i32,0);
+  idxs.push_back(zero);
+  idxs.push_back(zero);
+  return Builder.CreateStructGEP(classes[Object],alloca,0);
 }
