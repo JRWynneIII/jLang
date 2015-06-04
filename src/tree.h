@@ -336,10 +336,10 @@ class ClassAST : public ExprAST
   string Name;
   FunctionAST* Init;
   vector<FunctionAST*> FunctionList;
-  vector<VarInitExprAST*> Vars;
+  vector<ExprAST*> Vars;
   ObjectSymbolTable symbols;
 public:
-  ClassAST(string name, FunctionAST* init, vector<VarInitExprAST*> vars, vector<FunctionAST*> functionlist) : Name(name), Init(init), Vars(vars), FunctionList(functionlist) {}
+  ClassAST(string name, FunctionAST* init, vector<ExprAST*> vars, vector<FunctionAST*> functionlist) : Name(name), Init(init), Vars(vars), FunctionList(functionlist) {}
   ~ClassAST() {}
   virtual string getType() { return Name; }
   virtual string getName() { return Name; }

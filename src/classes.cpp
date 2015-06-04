@@ -79,20 +79,19 @@ Value* ClassAST::Codegen()
       symbols.addMethod((*it)->getName(), func);
     }
   }
-  vector<VarInitExprAST*>::iterator vi;
   if(Vars.size() > 0)
   {
-    for(vi = Vars.begin(); vi != Vars.end(); vi++)
+    for(auto vi : Vars)
     {
-      string n = (*vi)->getName();
-      string t = (*vi)->getType();
+      string n = vi->getName();
+      string t = vi->getType();
       symbols.setType(n,t);
-      Value* var = (*vi)->Codegen();
+      Value* var = vi->Codegen();
       if (!var)
         return 0;
       //May have to do some renameing of the variables in here so it doesn't clash with other vars in the IR
       symbols.addVar(n, var);
-      structTys.push_back(symbols.getLLVMType((*vi)->getName()));
+      structTys.push_back(symbols.getLLVMType(vi->getName()));
     }
   }
 
