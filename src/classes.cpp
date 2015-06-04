@@ -37,6 +37,7 @@ extern PointerType* intPtr8;
 extern PointerType* doublePtr;
 extern IRBuilder<> Builder;
 map<string,StructType*> classes;
+map<string,int> classIdxTable;
 Type* i32 = Type::getInt32Ty(getGlobalContext());
 Type* i8 = Type::getInt8Ty(getGlobalContext());
 Type* d64 = Type::getDoubleTy(getGlobalContext());
@@ -81,6 +82,7 @@ Value* ClassAST::Codegen()
   }
   if(Vars.size() > 0)
   {
+    int i = 0;
     for(auto vi : Vars)
     {
       string n = vi->getName();
@@ -92,6 +94,8 @@ Value* ClassAST::Codegen()
       //May have to do some renameing of the variables in here so it doesn't clash with other vars in the IR
       symbols.addVar(n, var);
       structTys.push_back(symbols.getLLVMType(vi->getName()));
+      classIdxTable[n] = i;
+      i++;
     }
   }
 
@@ -106,9 +110,18 @@ Value* ClassAST::Codegen()
 Value* ObjectInitAST::Codegen()
 {
   Value* alloca = Builder.CreateAlloca(classes[Object],0,Name.c_str());
+  NamedValues[Name] = alloca;
   vector<Value*> idxs;
   Value* zero = ConstantInt::get(i32,0);
   idxs.push_back(zero);
   idxs.push_back(zero);
   return Builder.CreateStructGEP(classes[Object],alloca,0);
+}
+
+Value* ObjectRefAST::Codegen()
+{
+  Value* Alloca = NamedValues[Name];
+  if (!Alloca)
+    ERROR("Invalid object reference: " + Name);
+
 }

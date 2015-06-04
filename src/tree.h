@@ -359,6 +359,19 @@ public:
   virtual Value* Codegen();
 };
 
+class ObjectRefAST : public ExprAST
+{
+  string Name;
+  string Member;
+  CallExprAST* Method;
+public:
+  ObjectRefAST(string name, string member) : Name(name), Member(member) {}
+  ObjectRefAST(string name, CallExprAST* method) : Name(name), Method(method) {}
+  virtual string getType() { return "object"; }
+  virtual string getName() { return Name; }
+  virtual Value* Codegen();
+};
+
 class KernelAST : public ExprAST
 {
   PrototypeAST *Proto;
