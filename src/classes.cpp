@@ -94,7 +94,7 @@ Value* ClassAST::Codegen()
       //May have to do some renameing of the variables in here so it doesn't clash with other vars in the IR
       symbols.addVar(n, var);
       structTys.push_back(symbols.getLLVMType(vi->getName()));
-      classIdxTable[n] = i;
+      classIdxTable[n+"_"+vi->getName()] = i;
       i++;
     }
   }
@@ -104,13 +104,13 @@ Value* ClassAST::Codegen()
   PointerType* structRegPtr = PointerType::get(structReg,0);
   classes[Name] = structReg;
   return Builder.CreateAlloca(structReg);//ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
-  //WHY IS NOTHING HAPPENING HERE????????????????????
 }
 
 Value* ObjectInitAST::Codegen()
 {
   Value* alloca = Builder.CreateAlloca(classes[Object],0,Name.c_str());
   NamedValues[Name] = alloca;
+  typeTab[Name] = Object;
   vector<Value*> idxs;
   Value* zero = ConstantInt::get(i32,0);
   idxs.push_back(zero);
@@ -123,5 +123,8 @@ Value* ObjectRefAST::Codegen()
   Value* Alloca = NamedValues[Name];
   if (!Alloca)
     ERROR("Invalid object reference: " + Name);
-
+  if(Method)
+    return Method->Codegen();
+  Value* objAddr = Builder.CreateStructGEP(classes[typeTab[Name]],Alloca,classIdxTable[typeTab[Name]+"_"+Member]);
+  return objAddr;
 }

@@ -86,6 +86,10 @@ void BinaryExprAST::convertTypes()
   }
   if (this->isPtrOp() || this->isArrayOp())
     return;
+
+  //TODO: add getting the object's member's type and converting if needed
+  if (lty == "object" || rty == "object")
+    return;
   else 
     ERROR("Types do not match!");
 }
@@ -390,14 +394,19 @@ Value* BinaryExprAST::doPtrOp()
 Value* BinaryExprAST::doAssignmentOp()
 {
     bool isVar = false;
+    bool isArray = false;
+    bool isObject = false;
     ArrayIndexAST* LHSA = dynamic_cast<ArrayIndexAST*>(LHS);
     VariableExprAST* LHSE = dynamic_cast<VariableExprAST*>(LHS);
+    ObjectRefAST* LHSO = dynamic_cast<ObjectRefAST*>(LHS);
 
-    if (!LHSA)
-    {
-        isVar = true;
-    }
-    if (!LHSE && !LHSA)
+    if (!LHSA && !LHSO)
+      isVar = true;
+    else if (!LHSE && !LHSO)
+      isArray = true;
+    else if (!LHSE && !LHSA)
+      isObject = true;
+    if (!LHSE && !LHSA && !LHSO)
     {
       ERROR("lvalue must be a variable!!");
     }
@@ -412,8 +421,10 @@ Value* BinaryExprAST::doAssignmentOp()
     Value* Variable;
     if (isVar)
       Variable = NamedValues[LHSE->getName()];
-    else
+    else if (isArray)
       Variable = NamedValues[LHSA->getName()];
+    else if (isObject)
+      Variable = NamedValues[LHSO->getName()];
     if (!Variable)
     {
       if (isVar)
@@ -427,6 +438,8 @@ Value* BinaryExprAST::doAssignmentOp()
     if (lty == "intArray" || lty == "doubleArray" || lty == "charArray")
       return Builder.CreateStore(R,L);
     if (lty == "ints" || lty == "doubles" || lty == "chars")
+      return Builder.CreateStore(R,L);
+    if (lty == "object")
       return Builder.CreateStore(R,L);
 
     return Builder.CreateStore(R,Variable);
