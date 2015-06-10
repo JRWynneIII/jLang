@@ -4,8 +4,9 @@ compiler:
   - clang
 
 install:
+  - sudo add-apt-repository ppa:jrheinlaender/ppa -y
   - sudo apt-get update -qq
-  - sudo apt-get install -qq clang llvm bison
+  - sudo apt-get install -qq clang llvm-3.6 bison
   - sudo apt-get install libboost-all-dev
 
 script:
