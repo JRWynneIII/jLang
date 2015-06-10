@@ -11,7 +11,7 @@ install:
   - export CC=clang
   - mkdir build
   - cd build
-  - ../llvm/configure --enable-optimized 
+  - ../llvm/configure --enable-optimized --disable-compiler-version-checks
   - make -j 8
   - sudo make install
   - cd ..
