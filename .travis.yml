@@ -5,7 +5,7 @@ compiler:
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq clang llvm
+  - sudo apt-get install -qq clang llvm bison
   - sudo apt-get install libboost-all-dev
 
 script:
