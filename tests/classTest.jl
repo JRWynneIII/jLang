@@ -1,3 +1,5 @@
+import stdio;
+
 class test
 {
   int a
@@ -8,6 +10,6 @@ func main() -> int
 {
   test obj
   obj.a = 1
- # obj.c = 18.3
+  obj.c = 18.3
   1
 }

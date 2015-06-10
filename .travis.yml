@@ -1,0 +1,24 @@
+language: C++
+
+compiler:
+  - clang
+
+install:
+  - sudo apt-get update -qq
+  - if [ "$CXX" == "g++" ]; then sudo apt-get install -qq clang llvm
+  - if [ "$CXX" == "clang++" ]; then sudo apt-get install -qq llvm
+  - sudo apt-get install libboost-all-dev
+
+script:
+  - cd src
+  - make
+  - cd ../tests
+  - for i in *.jl ; do ../src/jlangc $i && ./compile.sh && ./a.out && rm -f a.out done
+
+notifications:
+  email:
+    recipients:
+      - wynnejr@ornl.gov
+      - wynnejr@gpujake.com
+  on_success: [always]
+  on_failure: [always]

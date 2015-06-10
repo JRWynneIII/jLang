@@ -407,9 +407,7 @@ Value* BinaryExprAST::doAssignmentOp()
     else if (!LHSE && !LHSA)
       isObject = true;
     if (!LHSE && !LHSA && !LHSO)
-    {
       ERROR("lvalue must be a variable!!");
-    }
 
     //Codegen the right hand side.
     Value* Val = RHS->Codegen();
@@ -435,15 +433,10 @@ Value* BinaryExprAST::doAssignmentOp()
       exit(EXIT_FAILURE);
     }
 
-    if (lty == "intArray" || lty == "doubleArray" || lty == "charArray")
+    //If the LHS is already an address, store at that address
+    if (lty != "int" && lty != "double" && lty != "char" && lty != "string")
       return Builder.CreateStore(R,L);
-    if (lty == "ints" || lty == "doubles" || lty == "chars")
-      return Builder.CreateStore(R,L);
-    if (lty == "object")
-      return Builder.CreateStore(R,L);
-
     return Builder.CreateStore(R,Variable);
-
 }
 
 Value* BinaryExprAST::Codegen()

@@ -83,10 +83,13 @@ Value* ClassAST::Codegen()
   if(Vars.size() > 0)
   {
     int i = 0;
+    cout << Vars.size() << endl;
     for(auto vi : Vars)
     {
       string n = vi->getName();
       string t = vi->getType();
+      classIdxTable[Name+"_"+vi->getName()] = i;
+      i++;
       symbols.setType(n,t);
       Value* var = vi->Codegen();
       if (!var)
@@ -94,8 +97,6 @@ Value* ClassAST::Codegen()
       //May have to do some renameing of the variables in here so it doesn't clash with other vars in the IR
       symbols.addVar(n, var);
       structTys.push_back(symbols.getLLVMType(vi->getName()));
-      classIdxTable[n+"_"+vi->getName()] = i;
-      i++;
     }
   }
 
@@ -125,6 +126,12 @@ Value* ObjectRefAST::Codegen()
     ERROR("Invalid object reference: " + Name);
   if(Method)
     return Method->Codegen();
-  Value* objAddr = Builder.CreateStructGEP(classes[typeTab[Name]],Alloca,classIdxTable[typeTab[Name]+"_"+Member]);
+  if(!classes[typeTab[Name]])
+    ERROR("Object does not exist: " + Name);
+  int idx = classIdxTable[typeTab[Name] + "_" + Member];
+  if (classIdxTable.find(typeTab[Name] + "_" + Member) == classIdxTable.end())
+    ERROR("Member " + Member + " does not exist in type " + Name);
+  StructType* type = classes[typeTab[Name]];
+  Value* objAddr = Builder.CreateStructGEP(type,Alloca,idx);
   return objAddr;
 }
