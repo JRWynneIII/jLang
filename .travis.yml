@@ -5,8 +5,7 @@ compiler:
 
 install:
   - sudo apt-get update -qq
-  - if [ "$CXX" == "g++" ]; then sudo apt-get install -qq clang llvm
-  - if [ "$CXX" == "clang++" ]; then sudo apt-get install -qq llvm
+  - sudo apt-get install -qq clang llvm
   - sudo apt-get install libboost-all-dev
 
 script:
