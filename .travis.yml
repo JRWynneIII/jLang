@@ -9,6 +9,7 @@ install:
   - ./configure
   - make
   - sudo make install
+  - cd ..
   - sudo add-apt-repository ppa:jrheinlaender/ppa -y
   - sudo apt-get update -qq
   - sudo apt-get install -qq clang bison
