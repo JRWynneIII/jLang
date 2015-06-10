@@ -4,10 +4,14 @@ compiler:
   - clang
 
 install:
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+  - sudo apt-get install gcc-5
   - git clone https://github.com/llvm-mirror/llvm.git
-  - cd llvm
-  - ./configure
-  - make
+  - mkdir build
+  - cd build
+  - ../llvm/configure --enable-optimized 
+  - make -j 8
   - sudo make install
   - cd ..
   - sudo add-apt-repository ppa:jrheinlaender/ppa -y
