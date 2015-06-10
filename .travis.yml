@@ -5,20 +5,11 @@ compiler:
 
 install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq gcc-5
-  - export CXX=g++-5
-  - export CC=gcc-5
-  - git clone https://github.com/llvm-mirror/llvm.git
-  - mkdir build
-  - cd build
-  - ../llvm/configure --enable-optimized 
-  - make -j 8
-  - sudo make install
-  - cd ..
   - sudo add-apt-repository ppa:jrheinlaender/ppa -y
+  - sudo add-apt-repository "deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main"
+  - sudo add-apt-repository "deb-src http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main"
   - sudo apt-get update -qq
-  - sudo apt-get install -qq bison
+  - sudo apt-get install -qq bison llvm-3.6
   - sudo apt-get install libboost-all-dev
 
 script:
