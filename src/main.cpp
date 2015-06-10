@@ -86,6 +86,6 @@ int main(int argc, char*argv[])
   }
   raw_fd_ostream bcFile(fd, false);
   WriteBitcodeToFile(theModule,bcFile);
-  system("./compile.sh && sleep 5 && rm t.s t.ll");
+  //system("./compile.sh && sleep 5 && rm t.s t.ll");
   return EXIT_SUCCESS;
 }
