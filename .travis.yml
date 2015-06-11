@@ -6,10 +6,10 @@ compiler:
 install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update -qq
-  - sudo apt-get install libstdc++
+  - sudo apt-get install gcc-5
+  - alias gcc=gcc-5
+  - alias g++=g++-5
   - git clone https://github.com/llvm-mirror/llvm.git
-  - export CXX=clang++
-  - export CC=clang
   - mkdir build
   - cd build
   - ../llvm/configure --enable-optimized --disable-compiler-version-checks
