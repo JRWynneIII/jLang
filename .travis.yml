@@ -12,6 +12,7 @@ install:
   - sudo apt-get install libboost-all-dev
 
 script:
+  - llc --version
   - cd src
   - make
   - cd ../tests
