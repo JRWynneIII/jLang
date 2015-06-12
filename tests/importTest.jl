@@ -1,5 +1,4 @@
 import stdio;
-import test;
 
 func main() -> int {
   int a = 4
