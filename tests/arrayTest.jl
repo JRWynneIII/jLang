@@ -23,10 +23,10 @@ func main() -> int
   arr[7] = 7
   arr[8] = 8
   arr[9] = 9
-  int i 
-  for i=0,9
+  int a
+  for a=0,9
   {
-    printf("%d ",@arr[i])
+    printf("%d ",@arr[a])
   }
   putchar('\n')
   fill(arr[])
