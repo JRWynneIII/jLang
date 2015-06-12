@@ -116,7 +116,7 @@ Value* ObjectInitAST::Codegen()
   Value* zero = ConstantInt::get(i32,0);
   idxs.push_back(zero);
   idxs.push_back(zero);
-  return Builder.CreateStructGEP(classes[Object],alloca,0);
+  return Builder.CreateStructGEP(alloca,0);
 }
 
 Value* ObjectRefAST::Codegen()
@@ -132,6 +132,6 @@ Value* ObjectRefAST::Codegen()
   if (classIdxTable.find(typeTab[Name] + "_" + Member) == classIdxTable.end())
     ERROR("Member " + Member + " does not exist in type " + Name);
   StructType* type = classes[typeTab[Name]];
-  Value* objAddr = Builder.CreateStructGEP(type,Alloca,idx);
+  Value* objAddr = Builder.CreateStructGEP(Alloca,idx);
   return objAddr;
 }
