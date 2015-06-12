@@ -15,6 +15,7 @@ install:
   - sudo apt-get install -qq libboost-all-dev
 
 script:
+  - export LD_LIBRARY_PATH=/usr/lib/llvm-3.6/lib:$LD_LIBRARY_PATH
   - /usr/lib/llvm-3.6/bin/llc --version
   - cd src
   - flex lexer.l
