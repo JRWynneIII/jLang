@@ -10,16 +10,19 @@ install:
   - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
   - sudo apt-get update -qq
   - sudo apt-get purge -qq llvm
-  - sudo apt-get install -qq llvm-3.6-dev --force-yes
-  - sudo apt-get install -qq clang-3.6 bison
+  - sudo apt-get install -qq g++-5 llvm-3.6-dev --force-yes
+  - sudo apt-get install -qq bison libedit-dev
   - sudo apt-get install -qq libboost-all-dev
 
 script:
-  - llc --version
+  - /usr/lib/llvm-3.6/bin/llc --version
   - cd src
-  - make
+  - flex lexer.l
+  - bison -d jlang.ypp 
+  - export SRC="classes.cpp handler.cpp jlang.tab.cpp lex.yy.c vars.cpp loops.cpp functions.cpp ops.cpp main.cpp"
+  - g++-5 -pthread -w -g -std=c++11 -I/usr/lib/llvm-3.6/include $SRC `/usr/lib/llvm-3.6/bin/llvm-config --cppflags --ldflags --libs core mcjit native bitwriter --system-libs` -O0 -o jlangc
   - cd ../tests
-  - for i in *.jl ; do ../src/jlangc $i && ./compile.sh && ./a.out && rm -f a.out done
+  - for i in *.jl ; do ../src/jlangc $i; done
 
 notifications:
   email:
