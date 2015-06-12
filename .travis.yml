@@ -15,11 +15,14 @@ install:
   - sudo apt-get install -qq libboost-all-dev
 
 script:
-  - llc --version
+  - /usr/lib/llvm-3.6/bin/llc --version
   - cd src
-  - make
+  - flex lexer.l
+  - bison -d jlang.ypp 
+  - export SRC=classes.cpp handler.cpp jlang.tab.cpp lex.yy.c vars.cpp loops.cpp functions.cpp ops.cpp main.cpp 
+  - clang++ -pthread -w -g -std=c++11 -I/usr/lib/llvm-3.6/include `/usr/lib/llvm-3.6/bin/llvm-config --cppflags --ldflags --libs core mcjit native bitwriter --system-libs` -O0 -o jlangc
   - cd ../tests
-  - for i in *.jl ; do ../src/jlangc $i && ./compile.sh && ./a.out && rm -f a.out done
+  - for i in *.jl ; do ../src/jlangc $i; done
 
 notifications:
   email:
