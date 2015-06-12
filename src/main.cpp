@@ -77,6 +77,7 @@ int main(int argc, char*argv[])
   theModule->dump();
 #endif
 
+#ifndef TESTING
   string Errors, ErrorCatch;
   int fd = open("t.ll", O_RDWR | O_CREAT | O_TRUNC);
   if (fd <= 0)
@@ -87,5 +88,6 @@ int main(int argc, char*argv[])
   raw_fd_ostream bcFile(fd, false);
   WriteBitcodeToFile(theModule,bcFile);
   //system("./compile.sh && sleep 5 && rm t.s t.ll");
+#endif
   return EXIT_SUCCESS;
 }
