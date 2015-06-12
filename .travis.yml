@@ -1,4 +1,8 @@
 language: C++
+matrix:
+  include:
+    - llvm: "3.6"
+    - GCC: "5.0"
 
 compiler:
   - GCC
