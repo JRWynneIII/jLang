@@ -23,7 +23,23 @@ script:
   - export SRC="classes.cpp handler.cpp jlang.tab.cpp lex.yy.c vars.cpp loops.cpp functions.cpp ops.cpp main.cpp"
   - g++-5 -pthread -w -g -std=c++11 -I/usr/lib/llvm-3.6/include -DTESTING $SRC `llvm-config-3.6 --cppflags --ldflags --libs core mcjit native bitwriter --system-libs` -O0 -o jlangc
   - cd ../tests
-  - for i in *.jl ; do ../src/jlangc $i; done
+  - export JLC=../src/jlangc
+  - $JLC arrayTest.jl
+  - $JLC assignmentTest.jl
+  - $JLC classTest.jl
+  - $JLC dereferenceTest.jl
+  - $JLC dynamicArrayTest.jl
+  - $JLC forTest.jl
+  - $JLC functionTest.jl
+  - $JLC globalTest.jl
+  - $JLC ifTest.jl
+  - $JLC importTest.jl
+  - $JLC mandelbrot.jl
+  - $JLC scopeTest.jl
+  - $JLC stdio.jl
+  - $JLC stringTest.jl
+  - $JLC vecAdd.jl
+
 
 notifications:
   email:
