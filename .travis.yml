@@ -1,8 +1,4 @@
 language: C++
-matrix:
-  include:
-    - llvm: "3.6"
-    - GCC: "5.0"
 
 compiler:
   - GCC
@@ -10,10 +6,11 @@ compiler:
 install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo add-apt-repository ppa:jrheinlaender/ppa -y
-  - sudo add-apt-repository "deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main"
+  - sudo add-apt-repository 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main'
+  - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
   - sudo apt-get update -qq
-  - sudo apt-get install llvm-3.6 --force-yes
-  - sudo apt-get install -qq clang bison
+  - sudo apt-get install llvm-3.6-dev --force-yes
+  - sudo apt-get install -qq clang-3.6 bison
   - sudo apt-get install libboost-all-dev
 
 script:
