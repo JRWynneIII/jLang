@@ -35,3 +35,11 @@ Dependencies for jLang include:
 * LLVM 3.6 and up (Tested as working on 3.6 and 3.7)
 * Boost
 * clang++ with C++11 support
+
+To build jlang, run:
+```
+$ ./configure
+$ make
+```
+
+This will build the `jlangc` executable in the `bin` folder. Because as of right now, jLang uses `llc` and `gcc` as the backend, there is not `make install` rule defined.
