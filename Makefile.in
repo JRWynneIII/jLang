@@ -1,0 +1,21 @@
+CXX=@CXX@
+CPPFLAGS=@CXXFLAGS@
+CPPLIBS=@LIBS@
+FLEX=@LEX@
+BISON=@YACC@
+SRC= src/classes.cpp src/handler.cpp src/jlang.tab.cpp src/lex.yy.c src/vars.cpp src/loops.cpp src/functions.cpp src/ops.cpp src/main.cpp
+
+all: jlangc
+
+jlangc: ${SRC}
+	mkdir bin
+	$(CXX) $(CPPFLAGS) ${SRC} $(CPPLIBS) -o bin/jlangc
+
+src/lex.yy.c: src/lexer.l
+	cd src && $(FLEX) lexer.l
+
+src/jlang.tab.cpp: src/jlang.ypp
+	cd src && $(BISON) -d jlang.ypp
+
+clean:
+	rm -rf src/lex.yy.c bin src/jlang.tab.cpp src/jlang.tab.hpp src/module.tab.cpp src/module.tab.hpp
