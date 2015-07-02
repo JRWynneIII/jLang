@@ -83,7 +83,6 @@ Value* ClassAST::Codegen()
   if(Vars.size() > 0)
   {
     int i = 0;
-    cout << Vars.size() << endl;
     for(auto vi : Vars)
     {
       string n = vi->getName();
@@ -112,11 +111,7 @@ Value* ObjectInitAST::Codegen()
   Value* alloca = Builder.CreateAlloca(classes[Object],0,Name.c_str());
   NamedValues[Name] = alloca;
   typeTab[Name] = Object;
-  vector<Value*> idxs;
-  Value* zero = ConstantInt::get(i32,0);
-  idxs.push_back(zero);
-  idxs.push_back(zero);
-  return Builder.CreateStructGEP(alloca,0);
+  return alloca;
 }
 
 Value* ObjectRefAST::Codegen()
@@ -131,7 +126,6 @@ Value* ObjectRefAST::Codegen()
   int idx = classIdxTable[typeTab[Name] + "_" + Member];
   if (classIdxTable.find(typeTab[Name] + "_" + Member) == classIdxTable.end())
     ERROR("Member " + Member + " does not exist in type " + Name);
-  StructType* type = classes[typeTab[Name]];
   Value* objAddr = Builder.CreateStructGEP(Alloca,idx);
-  return objAddr;
+  return Builder.CreateLoad(objAddr,"derefMember");
 }

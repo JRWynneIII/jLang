@@ -58,18 +58,18 @@ int main(int argc, char*argv[])
     }
   }
 
-//  theModule->setDataLayout(DataLayout("e-m:e-i64:64-n32:64"));
-//  theModule->setTargetTriple("powerpc64le-unknown-linux-gnu");
+  theModule->setDataLayout(DataLayout("e-m:e-i64:64-n32:64"));
+  theModule->setTargetTriple("powerpc64le-unknown-linux-gnu");
   legacy::FunctionPassManager opt(theModule);
-  opt.add(createAggressiveDCEPass());
-  opt.add(createBasicAliasAnalysisPass());
-  opt.add(createPromoteMemoryToRegisterPass());
-  opt.add(createInstructionCombiningPass());
-  opt.add(createReassociatePass());
-  opt.add(createGVNPass());
-  opt.add(createCFGSimplificationPass());
-  opt.add(createVerifierPass());
-  opt.doInitialization();
+//  opt.add(createAggressiveDCEPass());
+//  opt.add(createBasicAliasAnalysisPass());
+//  opt.add(createPromoteMemoryToRegisterPass());
+//  opt.add(createInstructionCombiningPass());
+//  opt.add(createReassociatePass());
+//  opt.add(createGVNPass());
+//  opt.add(createCFGSimplificationPass());
+//  opt.add(createVerifierPass());
+//  opt.doInitialization();
   for ( Module::iterator it = theModule->begin(); it != theModule->end(); ++it)
     opt.run(*it);
   opt.doFinalization();
