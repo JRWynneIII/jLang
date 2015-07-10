@@ -58,8 +58,8 @@ int main(int argc, char*argv[])
     }
   }
 
-  theModule->setDataLayout(DataLayout("e-m:e-i64:64-n32:64"));
-  theModule->setTargetTriple("powerpc64le-unknown-linux-gnu");
+  //theModule->setDataLayout(DataLayout("e-m:e-i64:64-n32:64"));
+  //theModule->setTargetTriple("powerpc64le-unknown-linux-gnu");
   legacy::FunctionPassManager opt(theModule);
 //  opt.add(createAggressiveDCEPass());
 //  opt.add(createBasicAliasAnalysisPass());

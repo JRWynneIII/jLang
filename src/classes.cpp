@@ -126,6 +126,6 @@ Value* ObjectRefAST::Codegen()
   int idx = classIdxTable[typeTab[Name] + "_" + Member];
   if (classIdxTable.find(typeTab[Name] + "_" + Member) == classIdxTable.end())
     ERROR("Member " + Member + " does not exist in type " + Name);
-  Value* objAddr = Builder.CreateStructGEP(Alloca,idx);
-  return Builder.CreateLoad(objAddr,"derefMember");
+  Value* objAddr = Builder.CreateStructGEP(classes[typeTab[Name]],Alloca,idx);
+  return objAddr;//Builder.CreateLoad(objAddr,"derefMember");
 }
