@@ -221,7 +221,11 @@ classMethod: METHOD ID LPAREN paramDefs RPAREN block
 classInit: INIT LPAREN paramDefs RPAREN block
          | INIT LPAREN RPAREN block
 
-classDef: CLASS ID LBRACE classInit classVars classMethods RBRACE { $$ = new ClassAST($2,$4,classVarStmts,*$6); classVarStmts.clear(); }
+classContents: classVars
+             | classMethods
+             |
+
+classDef: CLASS ID LBRACE classVars classInit classMethods RBRACE { $$ = new ClassAST($2,$5,classVarStmts,*$6); classVarStmts.clear(); }
         | CLASS ID LBRACE classVars RBRACE  { vector<FunctionAST*> a; $$ = new ClassAST($2,NULL,classVarStmts, a); classVarStmts.clear(); }
         | CLASS ID LBRACE classInit classMethods { vector<ExprAST*> a; $$ = new ClassAST($2,$4, a,*$5); }
 
@@ -271,6 +275,7 @@ funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeA
 
 unaryOp: ID CAROT { $$ = new UnaryExprAST('^',new VariableExprAST($1,typeTab[$1])); }
        | operators array { $$ = new UnaryExprAST($1, $2); }
+       | operators objectRef { $$ = new UnaryExprAST($1, $2); }
        | operators ID { $$ = new UnaryExprAST($1,new VariableExprAST($2,typeTab[$2])); }
        | EMARK binOp { $$ = new UnaryExprAST('!', $2); }
       

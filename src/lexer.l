@@ -26,6 +26,7 @@ NUMBER [0-9]+
 "func" { return FUNC; }
 "method" { return METHOD; }
 "init" { return INIT; }
+"INIT" { return INIT; }
 "class" { return CLASS; }
 "extern" { return EXTERN; }
 "int" { return INT; }

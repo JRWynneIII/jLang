@@ -41,6 +41,8 @@ extern PointerType* intPtr8;
 extern PointerType* doublePtr;
 extern void dumpVars();
 
+extern Type* i32, i8, d64;
+
 //Returns true iff the types of the operands are ==
 bool BinaryExprAST::checkTypes()
 {
@@ -506,22 +508,26 @@ Value* UnaryExprAST::Codegen()
       }
     case '@':
       {
-        if (typeTab[RHS->getName()] != "string" && typeTab[RHS->getName()] != "ints" && typeTab[RHS->getName()] != "doubles" && typeTab[RHS->getName()] != "chars" && typeTab[RHS->getName()] != "intArray" && typeTab[RHS->getName()] != "doubleArray" && typeTab[RHS->getName()] != "charArray")
-        {
-          ERROR("Invalid rvalue (" + RHS->getName() + "for dereference operator!");
-        }
-        if (typeTab[RHS->getName()] != "intArray" && typeTab[RHS->getName()] != "doubleArray" && typeTab[RHS->getName()] != "charArray")
+        if (typeTab[RHS->getName()] == "string" || typeTab[RHS->getName()] == "ints" || typeTab[RHS->getName()] == "doubles" || typeTab[RHS->getName()] == "chars")
         {
           Value* gep = RHS->Codegen();
-          Value* allocaPtr = NamedValues[RHS->getName()];
-          //Value* derefPtr = Builder.CreateLoad(,"derefPtr");
+          Value* allocaPtr = NamedValues[RHS->getName()]; //Remove this? Why is this here?????
           return Builder.CreateLoad(gep,"derefVal");
         }
-        else
+        else if (typeTab.find(RHS->getName()) != typeTab.end())
+        {
+          Value* allocaPtr = RHS->Codegen();  //returns a GEP ptr
+          return Builder.CreateLoad(allocaPtr,"derefPtr");
+        }
+        else if (typeTab[RHS->getName()] == "intArray" && typeTab[RHS->getName()] == "doubleArray" && typeTab[RHS->getName()] == "charArray")
         {
           //is an array
           Value* allocaPtr = RHS->Codegen();  //returns a GEP ptr
           return Builder.CreateLoad(allocaPtr,"derefPtr");
+        }
+        else
+        {
+          ERROR("Invalid rvalue (" + RHS->getName() + "for dereference operator!");
         }
 
       }
