@@ -11,12 +11,6 @@ AC_LANG([C++])
 AC_CHECK_HEADERS(iostream)
 AC_CHECK_HEADERS(fstream)
 
-BOOST=1
-AC_CHECK_HEADERS(boost/lexical_cast.hpp, [], [BOOST=0])
-if test $BOOST == 0 ; then
-	AC_MSG_ERROR([You need boost/lexical_cast.hpp!])
-fi
-
 LLVM_PASSES=1
 AC_CHECK_HEADERS(llvm/Analysis/Passes.h, [], [LLVM_PASSES=0])
 if test $LLVM_PASSES == 0 ; then

@@ -16,7 +16,6 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/User.h"
-#include <boost/lexical_cast.hpp>
 #include <cctype>
 #include <cstdio>
 #include <map>

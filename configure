@@ -2848,7 +2848,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 echo "Testing for a C++ compiler"
 LIBS=`llvm-config --cppflags --ldflags --libs core mcjit native bitwriter --system-libs`
 LIBS=$(echo $LIBS | tr -d '\n' )
-CXXFLAGS="-g -std=c++11 -I/opt/at8.0/include/"
+CXXFLAGS="-g -std=c++11"
 CPPFLAGS="$CXXFLAGS $FLAGS"
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -3531,25 +3531,6 @@ fi
 
 done
 
-
-BOOST=1
-for ac_header in boost/lexical_cast.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/lexical_cast.hpp" "ac_cv_header_boost_lexical_cast_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_lexical_cast_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_LEXICAL_CAST_HPP 1
-_ACEOF
-
-else
-  BOOST=0
-fi
-
-done
-
-if test $BOOST == 0 ; then
-	as_fn_error $? "You need boost/lexical_cast.hpp!" "$LINENO" 5
-fi
 
 LLVM_PASSES=1
 for ac_header in llvm/Analysis/Passes.h

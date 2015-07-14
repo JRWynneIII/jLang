@@ -7,7 +7,6 @@
 #include<vector>
 #include<string>
 #include<stack>
-#include<boost/lexical_cast.hpp>
 std::map<std::string,double> varTable;
 std::map<std::string,std::string> typeTab;
 std::map<std::string,std::string> varStringTbl;
@@ -267,8 +266,8 @@ funcDef: funcProto block { $$ = $1; }
 
 kernelDef: kernelProto block { $$ = $1;}
 
-kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER { $$ = new PrototypeAST($2,args,boost::lexical_cast<string>($7),true); args.clear(); }
-           | KERNEL ID LPAREN           RPAREN LARROW NUMBER { $$ = new PrototypeAST($2,args,boost::lexical_cast<string>($6),true); args.clear(); }
+kernelProto: KERNEL ID LPAREN paramDefs RPAREN LARROW NUMBER { $$ = new PrototypeAST($2,args,to_string($7),true); args.clear(); }
+           | KERNEL ID LPAREN           RPAREN LARROW NUMBER { $$ = new PrototypeAST($2,args,to_string($6),true); args.clear(); }
 
 funcProto: FUNC ID LPAREN paramDefs RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$7); args.clear();  }
          | FUNC ID LPAREN           RPAREN RARROW dataType { $$ = new PrototypeAST($2,args,$6); args.clear();  }
