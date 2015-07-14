@@ -9,3 +9,5 @@ jlangc
 *.s
 test.*
 y
+autom4te.cache  
+config.log       
