@@ -1,7 +1,6 @@
 jLang Compiler [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/JRWynneIII/jLang?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 ========
 
-[![Join the chat at https://gitter.im/JRWynneIII/jLang](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/JRWynneIII/jLang?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 jLang is a compiled programming language that aims to have built in acceleration and parallelization structures. The grammar was designed to be simple, easily readable, and easy to transision to from other languages. jLang borrows syntax and constructs from various different languages to increase this ease of transition, including C, Fortran, Rust, D, Go, and Python. There is no line terminating character in this language, so it can be written all in one line like C but without the need for useless semicolons. jLang is designed to be fully compatable with all C types and codes/functions. An `extern` keyword is provided to give access to external C functions.
 Heres some example code:
 ```
